@@ -1,4 +1,4 @@
-#include "TODO_PACKAGE_NAME/TODO_NODE_NAME_node.hpp"
+#include "polynomial_planner/PolynomialPlanner.hpp"
 
 // For _1
 using namespace std::placeholders;
