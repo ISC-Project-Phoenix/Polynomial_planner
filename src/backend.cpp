@@ -20,16 +20,16 @@ std::optional<nav_msgs::msg::Path> SimpleBackEnd::create_path(const LeftRightRes
         sumRight +=  /* listenerArryRight[i]*/;
     }
     if(sumLeft != 0){
-        auto rightPoly = new Polynomial( /* vector from ros listener */);
+        Polynomial rightPoly = new Polynomial( /* vector from ros listener */);
     }else {
         // TODO this is lazy and bad fix please
-        auto rightPoly = null;
+        Polynomial rightPoly = null;
     }
     if(sumRight 1= 0){
-        auto leftPoly = new Polynomial( /* vector from ros listener */);
+        Polynomial leftPoly = new Polynomial( /* vector from ros listener */);
     } else {
         // TODO this is lazy and bad fix please
-        auto leftPoly = null;
+        Polynomial leftPoly = null;
     }
     class Polynomial {
         public:
