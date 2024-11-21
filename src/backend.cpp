@@ -10,13 +10,74 @@ std::optional<nav_msgs::msg::Path> SimpleBackEnd::create_path(const LeftRightRes
     // Start path from kart
     path.emplace_back(0, 0);        // what is path? how do we know it references the kart
 
-    //Sets vec_more and vec_less to proper side
-    auto& vec_more = (detections.left_detections.size() <= detections.right_detections.size())
-                         ? detections.right_detections
-                         : detections.left_detections;
-    auto& vec_less = (detections.left_detections.size() > detections.right_detections.size())
-                         ? detections.right_detections
-                         : detections.left_detections;
+    // take in Polynomial
+    // ros polynoial take in code...
+    // transfer to Polynomial class;
+    float sumRight = 0;
+    float sumLeft = 0;
+    for (int i = 0; i  < /* listenerArry.length*/; i++){
+        sumLeft  +=  /* listenerArrayLeft[i]*/;
+        sumRight +=  /* listenerArryRight[i]*/;
+    }
+    if(sumLeft != 0){
+        auto rightPoly = new Polynomial( /* vector from ros listener */);
+    }else {
+        // TODO this is lazy and bad fix please
+        auto rightPoly = null;
+    }
+    if(sumRight 1= 0){
+        auto leftPoly = new Polynomial( /* vector from ros listener */);
+    } else {
+        // TODO this is lazy and bad fix please
+        auto leftPoly = null;
+    }
+    class Polynomial {
+        public:
+            // TODO what does std::pmr::vec mean compared to std::vec ???
+            Polynomial(std::pmr::vector<float>& vect) {
+                this->vect = vect;
+            }
+            Polynomial() = default;
+            // store the vector
+        private:
+            std::pmr::vector<float> vect;
+        public:
+
+            // returns the y value at a given X.
+            float poly(float x) {
+                float result = 0;
+                for( int i = 0; i < vect.size(); i++ ) {
+                    int power = vect.size() - i;
+                    // TODO this pow function might be wrong
+                    result += vect[i] * pow(x, power); // a[n] * x ^ n
+                }
+                return result;
+            }
+            float polyDirvative(float x) {
+                float result = 0;
+                for( int i = 0; i < vect.size() -1; i++ ) {
+                    int power = vect.size() - i - 1;
+                    // todo finish?
+                    result += vect[i] * i * pow(x, power); // a[n] * n * x ^ (n - 1)
+                }
+            }
+    };// end polynomial_class
+
+
+    // interval for polynomial
+    float max = 10;
+    float interval = 0.1;
+    for ( float i = 0; i < max; i += interval){
+        // generate points
+        if (leftPoly != null){
+            // do left poly math;
+        }
+        if (rightPoly != null){
+            // do right poly math
+        }
+        // then we go from where
+
+    }
 
     // Pairs points from the longer side with the closest point on the shorter side
     for (auto& more_point : vec_more) {
