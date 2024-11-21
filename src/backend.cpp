@@ -71,11 +71,25 @@ std::optional<nav_msgs::msg::Path> SimpleBackEnd::create_path(const LeftRightRes
         // generate points
         if (leftPoly != null){
             // do left poly math;
+            // <y, -x>
+            float dx = leftPoly.polyDirvative(x);
+            float dy = 1;
+            float l = std::sqrt( dx*dx + dy*dy);
+            dx = dx/l;
+            dy = dy/l;
+            // return vector as < y, -x >
         }
         if (rightPoly != null){
             // do right poly math
+            // <-y, x>
+            float dx = rightPoly.polyDirvative(x);
+            float dy = 1;
+            float l = std::sqrt( dx*dx + dy*dy);
+            dx = dx/l;
+            dy = dy/l;
+            // return vector as < -y , x >
         }
-        // then we go from where
+        // rememebr to return
 
     }
 
