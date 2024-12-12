@@ -2,14 +2,14 @@
 
 #include <algorithm>
 
-std::optional<nav_msgs::msg::Path> SimpleBackEnd::create_path(const LeftRightResults& detections_org,
-                                                              std::string_view frame) {
-
+std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftPoly,
+                                                        const std::vector& rightPoly
+                                                        std::string_view frame) {
+// std::string_view is a string lol
     std::vector<cv::Point2d> path;  // this is the array for cone points
                                     // this will make the
     // Start path from kart
     path.emplace_back(0, 0);        // what is path? how do we know it references the kart
-
     // take in Polynomial
     // ros polynoial take in code...
     // transfer to Polynomial class;
@@ -31,43 +31,12 @@ std::optional<nav_msgs::msg::Path> SimpleBackEnd::create_path(const LeftRightRes
         // TODO this is lazy and bad fix please
         Polynomial leftPoly = null;
     }
-    class Polynomial {
-        public:
-            // TODO what does std::pmr::vec mean compared to std::vec ???
-            Polynomial(std::pmr::vector<float>& vect) {
-                this->vect = vect;
-            }
-            Polynomial() = default;
-            // store the vector
-        private:
-            std::pmr::vector<float> vect;
-        public:
-
-            // returns the y value at a given X.
-            float poly(float x) {
-                float result = 0;
-                for( int i = 0; i < vect.size(); i++ ) {
-                    int power = vect.size() - i;
-                    // TODO this pow function might be wrong
-                    result += vect[i] * pow(x, power); // a[n] * x ^ n
-                }
-                return result;
-            }
-            float polyDirvative(float x) {
-                float result = 0;
-                for( int i = 0; i < vect.size() -1; i++ ) {
-                    int power = vect.size() - i - 1;
-                    // todo finish?
-                    result += vect[i] * i * pow(x, power); // a[n] * n * x ^ (n - 1)
-                }
-            }
-    };// end polynomial_class
-
 
     // interval for polynomial
-    float max = 10;
-    float interval = 0.1;
-    for ( float i = 0; i < max; i += interval){
+    float max       =   10;
+    float interval  =   0.25;
+    float start     =   0;
+    for ( float start = 0; i < max; i += interval){
         // generate points
         if (leftPoly != null){
             // do left poly math;
@@ -97,9 +66,9 @@ std::optional<nav_msgs::msg::Path> SimpleBackEnd::create_path(const LeftRightRes
     for (auto& more_point : vec_more) {
         std::vector<double> distance;   // this is unnesscary for us
         cv::Point2d nearest;            // also unnesscary
+        // instead we can take the mid points for polynomials
 
         // Aggregate distances between sides to find the closest point
-        // instead we can take the mid points for polynomials
         for (auto& less_point : vec_less) {
             // push the raw x and y?
             distance.push_back(std::hypot(more_point.x - less_point.x, more_point.y - less_point.y));
