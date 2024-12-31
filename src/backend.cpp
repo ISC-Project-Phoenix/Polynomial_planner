@@ -9,53 +9,75 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     std::vector<cv::Point2d> path;  // this is the array for cone points
                                     // this will make the
     // Start path from kart
-    path.emplace_back(0, 0);        // what is path? how do we know it references the kart
+    path.emplace_back(0, 0);        
     // take in Polynomial
     // ros polynoial take in code...
     // transfer to Polynomial class;
-    float sumRight = 0;
-    float sumLeft = 0;
+    float is_right_valid = false;
+    float is_left_valid = false;
     for (int i = 0; i  < /* listenerArry.length*/; i++){
-        sumLeft  +=  /* listenerArrayLeft[i]*/;
-        sumRight +=  /* listenerArryRight[i]*/;
+        is_left_valid   = ( listenerArry[i] ) ? true : is_left_valid;
+        is_right_valid  = ( listenerArry[i] ) ? true : is_right_valid;
     }
-    if(sumLeft != 0){
-        Polynomial rightPoly = new Polynomial( /* vector from ros listener */);
+    leftPoly = (is_left_valid) ? new Polynomial( /* vector from ros listener */) : null;
+    if(is_left_valid){
+        Polynomial leftPoly = new Polynomial( /* vector from ros listener */);
     }else {
         // TODO this is lazy and bad fix please
-        Polynomial rightPoly = null;
+        Polynomial leftPoly = null;
     }
-    if(sumRight 1= 0){
-        Polynomial leftPoly = new Polynomial( /* vector from ros listener */);
+    rightPoly = (is_right_valid) ? new Polynomial( /* vector from ros listener */) : null;
+    if(is_right_valid){
+        Polynomial rightPoly = new Polynomial( /* vector from ros listener */);
     } else {
         // TODO this is lazy and bad fix please
-        Polynomial leftPoly = null;
+        Polynomial rightPoly = null;
     }
 
     // interval for polynomial
     float max       =   10;
     float interval  =   0.25;
     float start     =   0;
-    for ( float start = 0; i < max; i += interval){
+    std::vector<cv::Point2d> nav_points;
+    for (float i = start; i < max; i += interval){
         // generate points
+        nav_points.pushback();
         if (leftPoly != null){
             // do left poly math;
             // <y, -x>
             float dx = leftPoly.polyDirvative(x);
+            // calulate dx were dy is 1
+            // becuase I dont want to use a wrapper class
             float dy = 1;
+            // set dy to 1
             float l = std::sqrt( dx*dx + dy*dy);
-            dx = dx/l;
-            dy = dy/l;
+            // find the magnitude
+            dx = dx/l;  // normalize
+            dy = dy/l;  // normalize
+            cv::Point2d temp;
+            float x = i;                // define x 
+            float y = leftPoly.poly(x); // define y
+            temp.x = (x + 7 * dy);      // project x
+            temp.y = (y - 7 * dx )      // project y
+            nav_points[i].pushback(temp);
             // return vector as < y, -x >
         }
         if (rightPoly != null){
             // do right poly math
             // <-y, x>
+            // same steps different numbers
             float dx = rightPoly.polyDirvative(x);
             float dy = 1;
             float l = std::sqrt( dx*dx + dy*dy);
+            l = std::hypot(dx, dy);
             dx = dx/l;
             dy = dy/l;
+            cv::Point2d temp;
+            float x = i;
+            float y = leftPoly.poly(x);
+            temp.x = (x - 7 * dy);
+            temp.y = (y + 7 * dx )
+            nav_points[i].pushback(temp);
             // return vector as < -y , x >
         }
         // rememebr to return
