@@ -84,39 +84,6 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
 
     }
 
-    // Pairs points from the longer side with the closest point on the shorter side
-    for (auto& more_point : vec_more) {
-        std::vector<double> distance;   // this is unnesscary for us
-        cv::Point2d nearest;            // also unnesscary
-        // instead we can take the mid points for polynomials
-
-        // Aggregate distances between sides to find the closest point
-        for (auto& less_point : vec_less) {
-            // push the raw x and y?
-            distance.push_back(std::hypot(more_point.x - less_point.x, more_point.y - less_point.y));
-        }
-
-        // unnesscary
-        //finds index of vec_less where the distance is shortest
-        auto min_value = std::min_element(distance.begin(), distance.end());
-
-        //Tests if cones are too far apart
-                // we will not need this lol
-        if (*min_value <= params.tolerance_value) {
-
-            // dont worry we are feeding raw lol
-            nearest = vec_less[std::distance(distance.begin(), min_value)];
-
-            // Path point is the midpoint between the sides
-                // we could use this if we generate points too compare from both polynomials
-            cv::Point2d temp;
-            temp.x = (more_point.x + nearest.x) / 2;
-            temp.y = (more_point.y + nearest.y) / 2;
-            path.push_back(temp);
-
-        }
-    }
-
     if (path.empty()) {
         return std::nullopt;
     } else {
