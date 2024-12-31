@@ -3,7 +3,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
-class TODO_NODE_NAME : public rclcpp::Node {
+class polynomial_planner : public rclcpp::Node {
 private:
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub;
 
