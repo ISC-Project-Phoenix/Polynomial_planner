@@ -15,9 +15,12 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     // transfer to Polynomial class;
     float is_right_valid = false;
     float is_left_valid = false;
+
     for (int i = 0; i  < /* listenerArry.length*/; i++){
-        is_left_valid   = ( listenerArry[i] ) ? true : is_left_valid;
-        is_right_valid  = ( listenerArry[i] ) ? true : is_right_valid;
+
+        is_left_valid   = ( leftPoly  == NULL) ? is_left_valid : ( leftPoly[i]  != 0 ) ? true : is_left_valid;
+
+        is_right_valid  = ( rightPoly == NULL) ? is_right_valid : ( rightPoly[i] != 0 ) ? true : is_right_valid;
     }
     leftPoly = (is_left_valid) ? new Polynomial( /* vector from ros listener */) : null;
     if(is_left_valid){
@@ -91,7 +94,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
         nav_msgs::msg::Path msg{};
         msg.header.frame_id = frame;
 
-        // how do cv tyoes differ from ros types.
+        // how do cv types differ from ros types.
+        // converting <x,y> to message type in ROS
         std::transform(path.begin(), path.end(), std::back_inserter(msg.poses), [&frame](const cv::Point2d& point) {
             geometry_msgs::msg::PoseStamped pose{};
             pose.header.frame_id = frame;
