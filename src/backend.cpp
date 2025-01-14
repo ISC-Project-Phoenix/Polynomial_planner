@@ -1,4 +1,5 @@
 #include "polynomial_planner/backend.hpp"
+#include "geometry_msgs/msgs/PoseStamped.hpp"
 
 #include <algorithm>
 

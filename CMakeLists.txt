@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(TODO_PACKAGE_NAME)
+project(polynomial_planner)
 include(FetchContent)
 
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -12,17 +12,27 @@ find_package(rclcpp REQUIRED)
 # Messages TODO_EXTRA
 find_package(ackermann_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 # OpenCV TODO_EXTRA
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
 
 # Add source for node executable (link non-ros dependencies here)
-add_executable(TODO_PACKAGE_NAME src/TODO_NODE_NAME.cpp src/TODO_NODE_NAME_node.cpp)
-target_include_directories(TODO_PACKAGE_NAME PUBLIC
+add_executable(polynomial_planner src/PolynomialPlanner.cpp src/PolynomialPlanner_node.cpp)
+target_include_directories(polynomial_planner PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
-target_compile_features(TODO_PACKAGE_NAME PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(polynomial_planner PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+# Node 2
+add_executable(polynomial_planner_ai src/PolynomialPlannerAi.cpp src/PolynomialPlannerAi_node.cpp)
+target_include_directories(polynomial_planner_ai PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
+target_compile_features(polynomial_planner_ai PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 # Make ros deps a variable so they get linked to tests as well
 set(dependencies
@@ -31,18 +41,30 @@ set(dependencies
         ackermann_msgs
         sensor_msgs
         std_msgs
+        nav_msgs
+        geometry_msgs
+        tf2_geometry_msgs
         # OpenCv TODO_EXTRA
         cv_bridge
         OpenCV
-        )
+)
 
 # Link ros dependencies
 ament_target_dependencies(
-        TODO_PACKAGE_NAME
+        polynomial_planner
         ${dependencies}
 )
 
-install(TARGETS TODO_PACKAGE_NAME
+# Link ros dependencies
+ament_target_dependencies(
+        polynomial_planner_ai
+        ${dependencies}
+)
+
+install(TARGETS polynomial_planner
+        DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS polynomial_planner_ai
         DESTINATION lib/${PROJECT_NAME})
 
 # Uncomment below to make launch files available if created
@@ -62,8 +84,9 @@ if (BUILD_TESTING)
     ament_add_gtest(${PROJECT_NAME}-test
             tests/unit.cpp
             # Remember to add node source files
-            src/TODO_NODE_NAME_node.cpp
-            )
+            src/PolynomialPlanner_node.cpp
+            src/PolynomialPlannerAi_node.cpp
+    )
     ament_target_dependencies(${PROJECT_NAME}-test ${dependencies})
     target_include_directories(${PROJECT_NAME}-test PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

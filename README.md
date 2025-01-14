@@ -6,8 +6,8 @@ An opinionated ROS2 C++ node template, optimised for ISC.
 2. `rosdep install --from-paths . --ignore-src -r -y` to install deps
 3. `colcon build` to make sure the repo builds before you mess with it
 4. Replace the following in both file names and code exactly and consistently. 
-   1. TODO_PACKAGE_NAME: Replace with the package name. Use snake case. Ex. `polynomial_planner`
-   2. TODO_NODE_NAME: Replace with the node name. Use Pascal case. Ex. `PolynomialPlanner`
+   1. polynomial_planner: Replace with the package name. Use snake case. Ex. `polynomial_planner`
+   2. PolynomialPlanner: Replace with the node name. Use Pascal case. Ex. `PolynomialPlanner`
 5. `colcon build` again. If it builds, you are done
 6. Rename outer folder
 7. Review the optional dependencies, and remove what you do not need
@@ -29,19 +29,19 @@ These are marked with TODO_EXTRA.
 ```
 .
 ├── include
-│   └── TODO_PACKAGE_NAME
-│       └── TODO_NODE_NAME_node.hpp
+│   └── polynomial_planner
+│       └── PolynomialPlanner_node.hpp
 ├── package.xml
 ├── README.md
 ├── src
-│   ├── TODO_NODE_NAME.cpp
-│   └── TODO_NODE_NAME_node.cpp
+│   ├── PolynomialPlanner.cpp
+│   └── PolynomialPlanner_node.cpp
 └── tests
     └── unit.cpp
 ```
 
-TODO_NODE_NAME_node: Source files for the ROS2 node object itself, and only itself
+PolynomialPlanner_node: Source files for the ROS2 node object itself, and only itself
 
-TODO_NODE_NAME.cpp: Source for the main function of the node, and only the main function
+PolynomialPlanner.cpp: Source for the main function of the node, and only the main function
 
 tests/unit.cpp: Example file for unit tests. This is linked to the node and ros, so both can be used

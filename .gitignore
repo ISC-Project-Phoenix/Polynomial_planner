@@ -4,3 +4,4 @@ install
 .vscode
 .cache
 compile_commands.json
+*.kate-swp
