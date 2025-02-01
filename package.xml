@@ -4,12 +4,14 @@
     <name>polynomial_planner</name>
     <version>0.1.0</version>
     <description>A node template</description>
-    <maintainer email="avealov@umich.edu">Andrew Ealovega</maintainer>
+    <maintainer email="aboccacc@umich.edu">Alexander Boccaccio</maintainer>
     <license>MIT</license>
 
     <buildtool_depend>ament_cmake</buildtool_depend>
 
+    <!-- added for ROS listeners-->
     <depend>rclcpp</depend>
+    <depend>std_msgs</depend>
 
     <!--Messages TODO_EXTRA-->
     <depend>ackermann_msgs</depend>
