@@ -15,7 +15,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
+#find_package(std_msgs REQUIRED)
 # OpenCV TODO_EXTRA
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
@@ -23,6 +23,7 @@ find_package(OpenCV 4.2.0 REQUIRED)
 #for ros listeners
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(rclpy REQUIRED)
 # define the publisher and subscriper nodes with the node names
 add_executable(talker src/publisher_member_function.cpp)
 ament_target_dependencies(talker rclcpp std_msgs)
@@ -30,7 +31,7 @@ install(TARGETS
   talker
   DESTINATION lib/${PROJECT_NAME})
   #define project name
-#end ros listnerrs includes
+#end ros listners includes
 
 # Add source for node executable (link non-ros dependencies here)
 add_executable(polynomial_planner src/PolynomialPlanner.cpp src/PolynomialPlanner_node.cpp)
