@@ -62,7 +62,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
             float x = i;                // define x 
             float y = leftPoly.poly(x); // define y
             temp.x = (x + 7 * dy);      // project x
-            temp.y = (y - 7 * dx )      // project y
+            temp.y = (y - 7 * dx);     // project y
             nav_points[i].pushback(temp);
             // return vector as < y, -x >
         }
@@ -80,7 +80,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
             float x = i;
             float y = leftPoly.poly(x);
             temp.x = (x - 7 * dy);
-            temp.y = (y + 7 * dx )
+            temp.y = (y + 7 * dx);
             nav_points[i].pushback(temp);
             // return vector as < -y , x >
         }
