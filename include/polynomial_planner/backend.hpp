@@ -2,8 +2,9 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
-#include <vector>
 #include <string_view>
+#include <vector>
+
 #include "nav_msgs/msgs/Path.hpp"
 
 class Polynomial {

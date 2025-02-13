@@ -10,9 +10,9 @@ endif ()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 # Messages TODO_EXTRA
-find_package(ackermann_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(nav_msgs REQUIRED)
+# find_package(ackermann_msgs REQUIRED)
+# find_package(sensor_msgs REQUIRED)
+# find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 #find_package(std_msgs REQUIRED)
@@ -51,10 +51,10 @@ target_compile_features(polynomial_planner_ai PUBLIC c_std_99 cxx_std_17)  # Req
 set(dependencies
         rclcpp
         # Messages TODO_EXTRA
-        ackermann_msgs
-        sensor_msgs
+        # ackermann_msgs
+        # sensor_msgs
         std_msgs
-        nav_msgs
+        # nav_msgs
         geometry_msgs
         tf2_geometry_msgs
         # OpenCv TODO_EXTRA
