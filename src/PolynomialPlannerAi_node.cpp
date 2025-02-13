@@ -6,10 +6,6 @@
 // For _1
 using namespace std::placeholders;
 
-PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : Node("polynomial_planner_ai", options) {
+PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : Node("polynomial_planner_ai", options) {}
 
-}
-
-void PolynomialPlannerAi::sub_cb(std_msgs::msg::String::SharedPtr msg) {
-
-}
+void PolynomialPlannerAi::sub_cb(std_msgs::msg::String::SharedPtr msg) {}
