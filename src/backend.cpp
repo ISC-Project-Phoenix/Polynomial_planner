@@ -23,8 +23,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     if (is_left_valid) {
         Polynomial leftPoly = new Polynomial(/* vector from ros listener */);
     } else {
-            // TODO this is lazy and bad fix please
-            Polynomial leftPoly = null;
+        // TODO this is lazy and bad fix please
+        Polynomial leftPoly = null;
     }
 
     // interval for polynomial
@@ -32,18 +32,16 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     float interval = 3;
     float start = 5;
     float threshold = 15.0;
-    
+
     // TODO this is lazy and bad fix please
     float dist = 0;
     for (int i = start; i < max; i += interval) {
-
         dist += sqrt(interval * interval + pow(leftPoly.poly(i) - leftPoly.poly(i + interval), 2));
 
         if (dist > threshold) {
-            path.pushback(cv::Point2d(i,leftPoly.poly(i)));
+            path.pushback(cv::Point2d(i, leftPoly.poly(i)));
             dist = 0;
         }
-
     }
 
     if (path.empty()) {
