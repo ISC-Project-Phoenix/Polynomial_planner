@@ -1,16 +1,15 @@
 #pragma once
 
 #include <opencv2/core/types.hpp>
-
 #include <vector>
 
+#include "image_geometry/pinhole_camera_model.h"
 #include "nav_msgs/msg/path.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
-#include "sensor_msgs/msg/camera_info.hpp"
-#include "image_geometry/pinhole_camera_model.h"
 
 class PolynomialPlanner : public rclcpp::Node {
 private:
@@ -29,14 +28,12 @@ private:
     std::unique_ptr<tf2_ros::TransformListener> tf2_listener;
     std::unique_ptr<tf2_ros::Buffer> tf2_buffer;
 
-    
-
 public:
     PolynomialPlanner(const rclcpp::NodeOptions& options);
 
     /// subscriber callback
     void sub_cb(std_msgs::msg::String::SharedPtr msg);
 
-    // camera transform 
+    // camera transform
     std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels);
 };
