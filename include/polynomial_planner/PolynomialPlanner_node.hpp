@@ -2,17 +2,25 @@
 
 #include <opencv2/core/types.hpp>
 
+#include <vector>
+
 #include "nav_msgs/msg/path.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
+#include "sensor_msgs/msg/camera_info.hpp"
+#include "image_geometry/pinhole_camera_model.h"
 
 class PolynomialPlanner : public rclcpp::Node {
 private:
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub;
 
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub;
+
+    // Camera info sub & model vars
+    rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr rgb_info_sub;
+    image_geometry::PinholeCameraModel rgb_model;
 
     // std::optional<nav_msgs::msg::Path>
     std::unique_ptr<std::optional<nav_msgs::msg::Path>> Backend;
@@ -21,9 +29,14 @@ private:
     std::unique_ptr<tf2_ros::TransformListener> tf2_listener;
     std::unique_ptr<tf2_ros::Buffer> tf2_buffer;
 
+    
+
 public:
     PolynomialPlanner(const rclcpp::NodeOptions& options);
 
     /// subscriber callback
     void sub_cb(std_msgs::msg::String::SharedPtr msg);
+
+    // camera transform 
+    std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels);
 };

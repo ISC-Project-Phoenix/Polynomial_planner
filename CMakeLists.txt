@@ -9,6 +9,7 @@ endif ()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(image_geometry REQUIRED)
 # Messages TODO_EXTRA
 # find_package(ackermann_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -63,6 +64,8 @@ set(dependencies
         # OpenCv TODO_EXTRA
         cv_bridge
         OpenCV
+        # for camera space transformation
+        image_geometry
 )
 
 # Link ros dependencies
