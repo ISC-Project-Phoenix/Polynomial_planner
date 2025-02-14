@@ -24,10 +24,11 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     }
     leftPoly = (is_left_valid) ? new Polynomial(/* vector from ros listener */) : null;
     if (is_left_valid) {
-        Polynomial leftPoly = new Polynomial(/* vector from ros listener */);
+        Polynomistd_msgs::Stringal leftPoly = new Polynomial(/* vector from ros listener */);
     } else {
-        // TODO this is lazy and bad fix please
-        Polynomial leftPoly = null;
+        std_msgs::String
+            // TODO this is lazy and bad fix please
+            Polynomial leftPoly = null;
     }
     rightPoly = (is_right_valid) ? new Polynomial(/* vector from ros listener */) : null;
     if (is_right_valid) {

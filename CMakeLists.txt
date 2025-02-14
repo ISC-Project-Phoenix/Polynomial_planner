@@ -11,11 +11,10 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 # Messages TODO_EXTRA
 # find_package(ackermann_msgs REQUIRED)
-# find_package(sensor_msgs REQUIRED)
-# find_package(nav_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-#find_package(std_msgs REQUIRED)
 # OpenCV TODO_EXTRA
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
@@ -26,11 +25,11 @@ find_package(std_msgs REQUIRED)
 find_package(rclpy REQUIRED)
 # define the publisher and subscriper nodes with the node names
 add_executable(talker src/publisher_member_function.cpp)
-add_executable(talkerCV src/PolynomialPlanner_node.cpp)
-add_executable(talkerAI src/PolynomialPlanner_node.cpp)
+# add_executable(talkerCV src/PolynomialPlanner_node.cpp)
+# add_executable(talkerAI src/PolynomialPlanner_node.cpp)
 ament_target_dependencies(talker rclcpp std_msgs)
-ament_target_dependencies(talkerCV rclcpp std_msgs)
-ament_target_dependencies(talkerAI rclcpp std_msgs)
+# ament_target_dependencies(talkerCV rclcpp std_msgs)
+# ament_target_dependencies(talkerAI rclcpp std_msgs)
 install(TARGETS
   talker
   DESTINATION lib/${PROJECT_NAME})
@@ -56,9 +55,9 @@ set(dependencies
         rclcpp
         # Messages TODO_EXTRA
         # ackermann_msgs
-        # sensor_msgs
+        sensor_msgs
         std_msgs
-        # nav_msgs
+        nav_msgs
         geometry_msgs
         tf2_geometry_msgs
         # OpenCv TODO_EXTRA

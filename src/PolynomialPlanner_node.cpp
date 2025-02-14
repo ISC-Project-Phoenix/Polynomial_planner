@@ -12,7 +12,7 @@ PolynomialPlanner::PolynomialPlanner(const rclcpp::NodeOptions& options) : Node(
     // delcare params
     auto random_int = this->declare_parameter("random_int", 0);
 
-    pub = this->create_publisher<srd_mgs::string>("topic", 10);
+    pub = this->create_publisher<std_msgs::msg::String>("topic", 10);
 
     // TF2 things
     //  this->tf2_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());

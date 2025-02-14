@@ -5,7 +5,7 @@
 #include <string_view>
 #include <vector>
 
-#include "nav_msgs/msgs/Path.hpp"
+#include "nav_msgs/msg/path.hpp"
 
 class Polynomial {
 public:
