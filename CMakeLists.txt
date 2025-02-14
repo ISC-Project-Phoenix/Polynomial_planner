@@ -26,7 +26,11 @@ find_package(std_msgs REQUIRED)
 find_package(rclpy REQUIRED)
 # define the publisher and subscriper nodes with the node names
 add_executable(talker src/publisher_member_function.cpp)
+add_executable(talkerCV src/PolynomialPlanner_node.cpp)
+add_executable(talkerAI src/PolynomialPlanner_node.cpp)
 ament_target_dependencies(talker rclcpp std_msgs)
+ament_target_dependencies(talkerCV rclcpp std_msgs)
+ament_target_dependencies(talkerAI rclcpp std_msgs)
 install(TARGETS
   talker
   DESTINATION lib/${PROJECT_NAME})
