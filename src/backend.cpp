@@ -16,16 +16,10 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     float is_right_valid = false;
     float is_left_valid = false;
 
-    for (int i = 0; i < /* listenerArry.length*/; i++) {
+    for (int i = 0; i < leftPoly.size(); i++) {
         is_left_valid = (leftPoly == NULL) ? is_left_valid : (leftPoly[i] != 0) ? true : is_left_valid;
     }
-    leftPoly = (is_left_valid) ? new Polynomial(/* vector from ros listener */) : null;
-    if (is_left_valid) {
-        Polynomial leftPoly = new Polynomial(/* vector from ros listener */);
-    } else {
-        // TODO this is lazy and bad fix please
-        Polynomial leftPoly = null;
-    }
+    leftPoly = (is_left_valid) ? new Polynomial(leftPoly) : null;
 
     // interval for polynomial
     float max = 200;
@@ -40,7 +34,14 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
 
         if (dist > threshold) {
             path.pushback(cv::Point2d(i, leftPoly.poly(i)));
-            dist = 0;
+            // TODO was disif probably a typo thb
+            if (is_left_valid) {
+                Polynomial leftPoly = new Polynomial(leftPoly);
+            } else {
+                // TODO this is lazy and bad fix please
+                Polynomial leftPoly = null;
+            }
+            t = 0;
         }
     }
 
