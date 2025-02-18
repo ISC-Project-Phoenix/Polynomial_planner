@@ -4,10 +4,10 @@
 
 #include "geometry_msgs/msgs/PoseStamped.hpp"
 
-std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftPoly, std::string_view frame) {
+std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftPolyVector, std::string_view frame) {
     // std::string_view is a string lol
-    std::vector<cv::Point2d> path;  // this is the array for cone points
-                                    // this will make the
+    std::vector<cv::Point2d> path;  // this is the vector of path plannign points
+
     // Start path from kart
     path.emplace_back(0, 0);
     // take in Polynomial
@@ -16,32 +16,25 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     float is_right_valid = false;
     float is_left_valid = false;
 
-    for (int i = 0; i < leftPoly.size(); i++) {
-        is_left_valid = (leftPoly == NULL) ? is_left_valid : (leftPoly[i] != 0) ? true : is_left_valid;
+    for (int i = 0; i < leftPolyVector.size(); i++) {
+        is_left_valid = (leftPolyVector == NULL) ? is_left_valid : (leftPolyVector[i] != 0) ? true : is_left_valid;
     }
-    leftPoly = (is_left_valid) ? new Polynomial(leftPoly) : null;
+    leftPoly = (is_left_valid) ? new Polynomial(leftPolyVector) : null;
 
     // interval for polynomial
-    float max = 200;
-    float interval = 3;
-    float start = 5;
-    float threshold = 15.0;
+    float max = 280;        // artificial event horizon
+    float interval = 3;     // stepping x value up by 3camera px on each iteration
+    float start = 475;      // bottom of frame
+    float threshold = 15.0; // min dist between points
 
     // TODO this is lazy and bad fix please
     float dist = 0;
-    for (int i = start; i < max; i += interval) {
-        dist += sqrt(interval * interval + pow(leftPoly.poly(i) - leftPoly.poly(i + interval), 2));
+    for (int x = start; x > max; x -= interval) {
+        dist += sqrt(interval * interval + pow(leftPoly.poly(x) - leftPoly.poly(x + interval), 2));
 
         if (dist > threshold) {
-            path.pushback(cv::Point2d(i, leftPoly.poly(i)));
-            // TODO was disif probably a typo thb
-            if (is_left_valid) {
-                Polynomial leftPoly = new Polynomial(leftPoly);
-            } else {
-                // TODO this is lazy and bad fix please
-                Polynomial leftPoly = null;
-            }
-            t = 0;
+            path.pushback(cv::Point2d(x, leftPoly.poly(x)));
+            dist = 0;
         }
     }
 
