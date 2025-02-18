@@ -8,6 +8,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "nav_msgs/msg/path.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 
@@ -35,5 +36,5 @@ public:
     void sub_cb(std_msgs::msg::String::SharedPtr msg);
 
     // camera transform
-    std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels);
+    nav_msgs::msg::Path cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels);
 };
