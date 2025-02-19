@@ -13,7 +13,7 @@
 
 class PolynomialPlanner : public rclcpp::Node {
 private:
-rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub;
 
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub;
 

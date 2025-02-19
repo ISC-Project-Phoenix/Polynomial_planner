@@ -39,21 +39,21 @@ nav_msgs::msg::Path PolynomialPlanner::cameraPixelToGroundPos(std::vector<cv::Po
         cv::Point2d rectPixel = this->rgb_model.rectifyPoint(pixel);
         cv::Point3d ray = this->rgb_model.projectPixelTo3dRay(rectPixel);
 
-        //        TODO:
-        //        Vector3D intersectPoint(Vector3D rayVector, Vector3D rayPoint, Vector3D planeNormal, Vector3D planePoint) {
-        //            Vector3D diff = rayPoint - planePoint;
-        //            double prod1 = diff.dot(planeNormal);
-        //            double prod2 = rayVector.dot(planeNormal);
-        //            double prod3 = prod1 / prod2;
-        //            return rayPoint - rayVector * prod3;
-        //        }
+        //        TODO: TEST
+        Vector3D intersectPoint(Vector3D rayVector, Vector3D rayPoint, Vector3D planeNormal, Vector3D planePoint) {
+            Vector3D diff = rayPoint - planePoint;
+            double prod1 = diff.dot(planeNormal);
+            double prod2 = rayVector.dot(planeNormal);
+            double prod3 = prod1 / prod2;
+            return rayPoint - rayVector * prod3;
+        }
     }
 
     return rwpoints;
 }
 
 geometry_msgs::msg::PoseArray PolynomialPlanner::project_to_world(const std::vector<cv::Point2d>& object_locations,
-                                                                const cv::Mat& depth) {
+                                                                  const cv::Mat& depth) {
     geometry_msgs::msg::PoseArray poses{};
     poses.header.frame_id = this->get_parameter(std::string{"camera_frame"}).as_string();
 
