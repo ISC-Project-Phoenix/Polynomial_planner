@@ -8,13 +8,12 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "nav_msgs/msg/path.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 
 class PolynomialPlanner : public rclcpp::Node {
 private:
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub;
+rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub;
 
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub;
 
