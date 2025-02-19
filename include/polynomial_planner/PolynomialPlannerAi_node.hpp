@@ -23,4 +23,5 @@ public:
 
     /// subscriber callback
     void polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg);
+    void evaluate_polynomial(const std::vector<float>& coeffs, const std::vector<float>& x_values);
 };
