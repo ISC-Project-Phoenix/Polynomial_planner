@@ -7,6 +7,7 @@
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include <tf2/LinearMath/Quaternion.h>
 
 // For _1
 using namespace std::placeholders;
@@ -48,6 +49,8 @@ std::vector<cv::Point2d> PolynomialPlanner::cameraPixelToGroundPos(std::vector<c
         // This converts from camera coordinates in OpenCV to ROS coordinates
         tf2::Quaternion optical_to_ros{};
         optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
+
+        // push back vectors
         rwpoints.push_back(dvector);
     }
 
