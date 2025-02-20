@@ -2,7 +2,6 @@
 
 #include <algorithm>
 
-
 #include "geometry_msgs/msgs/PoseStamped.hpp"
 
 std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftPolyVector, std::string_view frame) {
@@ -23,10 +22,10 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     leftPoly = (is_left_valid) ? new Polynomial(leftPolyVector) : null;
 
     // interval for polynomial
-    float max = 280;        // artificial event horizon
-    float interval = 3;     // stepping x value up by 3camera px on each iteration
-    float start = 475;      // bottom of frame
-    float threshold = 15.0; // min dist between points
+    float max = 280;         // artificial event horizon
+    float interval = 3;      // stepping x value up by 3camera px on each iteration
+    float start = 475;       // bottom of frame
+    float threshold = 15.0;  // min dist between points
 
     // TODO this is lazy and bad fix please
     float dist = 0;

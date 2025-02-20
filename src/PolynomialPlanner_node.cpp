@@ -43,6 +43,11 @@ std::vector<cv::Point2d> PolynomialPlanner::cameraPixelToGroundPos(std::vector<c
         // ray.setZ(ray.getZ() * -1); we don't really care abt z, since it -will- *should* always just be cameraHeight
 
         cv::Point2d dvector(ray.x, ray.y);
+        
+        // Rotation that rotates left 90 and backwards 90.
+        // This converts from camera coordinates in OpenCV to ROS coordinates
+        tf2::Quaternion optical_to_ros{};
+        optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
         rwpoints.push_back(dvector);
     }
 
