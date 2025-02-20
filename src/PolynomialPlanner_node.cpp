@@ -33,22 +33,31 @@ void PolynomialPlanner::sub_cb(std_msgs::msg::String::SharedPtr msg) {}
 // TODO: make it not die when z is too small
 //       or make z not too small
 std::vector<cv::Point2d> PolynomialPlanner::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels) {
+
+    // Rotation that rotates left 90 and backwards 90.
+        // This converts from camera coordinates in OpenCV to ROS coordinates
+        tf2::Quaternion optical_to_ros{};
+        // set the Roll Pitch YAW
+        optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
+
     std::vector<cv::Point2d> rwpoints;
     for (const cv::Point2d& pixel : pixels) {
         // gotta rectify the pixel before we raycast
         cv::Point2d rectPixel = this->rgb_model.rectifyPoint(pixel);
         cv::Point3d ray = this->rgb_model.projectPixelTo3dRay(rectPixel);
-
-        // ask zach for the trig
-        ray /= ray.z / 0.6;
-        // ray.setZ(ray.getZ() * -1); we don't really care abt z, since it -will- *should* always just be cameraHeight
-
-        cv::Point2d dvector(ray.x, ray.y);
         
-        // Rotation that rotates left 90 and backwards 90.
-        // This converts from camera coordinates in OpenCV to ROS coordinates
-        tf2::Quaternion optical_to_ros{};
-        optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
+
+        // ask zach for the trig, extend ray to the floor. 
+        ray /= ray.z / -0.6;
+        // ray.setZ(ray.getZ() * -1); we don't really care abt z, since it -will- *should* always just be cameraHeight
+        tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
+        tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
+
+        //return type world_vec, use this is 
+
+        cv::Point2d dvector(world_vec.x, world_vec.y);
+        
+        
 
         // push back vectors
         rwpoints.push_back(dvector);
