@@ -15,7 +15,7 @@ class PolynomialPlanner : public rclcpp::Node {
 private:
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub;
 
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub;
+    rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr sub;
 
     // Camera info sub & model vars
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr rgb_info_sub;
