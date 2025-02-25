@@ -15,13 +15,12 @@
 using namespace std::placeholders;
 
 PolynomialPlanner::PolynomialPlanner(const rclcpp::NodeOptions& options) : Node("polynomial_planner", options) {
-    // delcare params
-    auto random_int = this->declare_parameter("random_int", 0);
-    this->declare_parameter("camera_frame", "mid_cam_link");
 
     this->path_pub = this->create_publisher<nav_msgs::msg::Path>("/path", 5);
 
-    // run once get pointer never used again
+    this->poly_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
+        "/road/polynomial", 1, std::bind(&PolynomialPlanner::polynomial_cb, this, _1));
+
     this->rgb_info_sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
