@@ -6,10 +6,10 @@
 #include <vector>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/camera_info.hpp"
-#include "std_msgs/msg/string.hpp"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+
+
+
+
 using namespace std::placeholders;
 
 PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : Node("polynomial_planner_ai", options) {
