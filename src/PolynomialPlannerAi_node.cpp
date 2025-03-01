@@ -5,7 +5,7 @@
 
 #include <vector>
 
-#include "geometry_msgs/msgs/PoseStamped.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/string.hpp"
