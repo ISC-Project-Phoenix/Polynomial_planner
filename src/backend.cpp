@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "geometry_msgs/msgs/PoseStamped.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
 std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftPolyVector, std::string_view frame) {
     // std::string_view is a string lol
