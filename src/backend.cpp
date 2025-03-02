@@ -40,13 +40,15 @@ std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftP
     if (cam_path.empty()) {
         return std::nullopt;
     } else {
-        // Convert from cv types to ros
+        // Convert from cv types to nav::msg
 
         std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path);
 
         nav_msgs::msg::Path msg{};
-        msg.header.frame_id = frame;
-
+        // msg.header.frame_id = frame;
+        for (cv::Point2d ground_points : ground_path){
+            std::
+        }
         // how do cv types differ from ros types.
         // converting <x,y> to message type in ROS
         std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
@@ -81,7 +83,11 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         cv::Point3d ray = this->rgb_model.projectPixelTo3dRay(rectPixel);
 
         // ask zach for the trig, extend ray to the floor.
-        ray /= ray.z / -0.6;
+        float divisor = ray.z / -0.6;
+        ray.x = ray.x / divisor;
+        ray.y = ray.y / divisor;
+        ray.z = ray.z / divisor;
+        // ray /= ray.z / -0.6;
         // ray.setZ(ray.getZ() * -1); we don't really care abt z, since it -will- *should* always just be cameraHeight
         tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
         tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);

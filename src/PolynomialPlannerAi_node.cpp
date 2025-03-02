@@ -48,11 +48,12 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
 
         bool do_logger = true;
         if (do_logger) {
+            // TODO change path_poses.size() "size does not exist"
             for (int i = 0; i < path_poses.size(); i++) {
                 // RCLCPP_INFO(this->get_logger(), "");
             }
         }
-        this->path_pub->publish(*path);
+        this->path_pub->publish(*path); // error invalid operator *path
     }
 
     // Extract and print coefficients
