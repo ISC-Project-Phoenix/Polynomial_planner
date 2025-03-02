@@ -40,13 +40,13 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     } else {
         // Convert from cv types to nav::msg
         // too few args
-        std::vector<cv::Point3d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
+        std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
 
         nav_msgs::msg::Path msg{};
         // msg.header.frame_id = frame;
-        for (cv::Point2d ground_points : ground_path) {
+        // for (cv::Point2d ground_points : ground_path) {
             // std::
-        }
+       //  }
         // converting <x,y> to message type in ROS
         std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
                        [&frame](const cv::Point2d& point) {
@@ -56,7 +56,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
                            pose.header.frame_id = frame;  // literally is "notaemptystring"
                            pose.pose.position.x = point.x;
                            pose.pose.position.y = point.y;
-                           pose.pose.position.z = point.z;
+                           // pose.pose.position.z = point.z;
 
                            return pose;
                        });
@@ -68,7 +68,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
 // why are the pointer things the way they are
 // TODO: make it not die when z is too smallf
 //       or make z not too small
-std::vector<cv::Point3d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
+std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
                                                          image_geometry::PinholeCameraModel rgb_info_sub) {
     // Rotation that rotates left 90 and backwards 90.
     // This converts from camera coordinates in OpenCV to ROS coordinates
@@ -96,7 +96,7 @@ std::vector<cv::Point3d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
 
         //return type world_vec, use this is
 
-        cv::Point3d dvector(world_vec.x(), world_vec.y(). world_vec.z());
+        cv::Point2d dvector(world_vec.x(), world_vec.y());
 
         // push back vectors
         rwpoints.push_back(dvector);
