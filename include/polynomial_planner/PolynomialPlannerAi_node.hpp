@@ -7,12 +7,11 @@
 #include "nav_msgs/msg/path.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
+#include "std_msgs/msg/float32_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
-#include "std_msgs/msg/float32_multi_array.hpp"
-
 
 class PolynomialPlannerAi : public rclcpp::Node {
 private:
@@ -35,6 +34,7 @@ public:
     PolynomialPlannerAi(const rclcpp::NodeOptions& options);
 
     /// subscriber callback
-    void polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg);
+    void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg,
+                                            sensor_msgs::msg::CameraInfo camera_rgb);
     void evaluate_polynomial(const std::vector<float>& coeffs, const std::vector<float>& x_values);
 };

@@ -1,4 +1,5 @@
 #include "polynomial_planner/PolynomialPlannerAi_node.hpp"
+
 #include "backend.cpp"
 
 // Required for doTransform
@@ -8,20 +9,18 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
-
-
-
 using namespace std::placeholders;
 
 PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : Node("polynomial_planner_ai", options) {
-    this->poly_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
-        "/road/polynomial", 1, std::bind(&PolynomialPlannerAi::polynomial_cb, this, _1));
-
-    this->path_pub = this->create_publisher<nav_msgs::msg::Path>("/path", 5);
-
     this->rgb_info_sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
+
+    this->poly_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
+        "/road/polynomial", 1,
+        [this](const std_msgs::msg::Float32MultiArray::SharedPtr msg) { this->polynomial_cb(msg, rgb_info_sub); });
+
+    this->path_pub = this->create_publisher<nav_msgs::msg::Path>("/path", 5);
 
     RCLCPP_INFO(this->get_logger(), "PolynomialPlannerAi Node Started! Waiting for polynomial data...");
     // TF2 things
@@ -29,7 +28,8 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
     this->tf2_listener = std::make_unique<tf2_ros::TransformListener>(*this->tf2_buffer);
 }
 
-void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg) {
+void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg,
+                                        sensor_msgs::msg::CameraInfo camera_rgb) {
     if (msg->empty()) {
         RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
         return;
@@ -42,7 +42,7 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
             coeff.push_back(msg->data[i]);
         }
 
-        nav_msgs::msg::Path path = backend::create_path(coeff, frame);
+        nav_msgs::msg::Path path = backend::create_path(coeff, camera_rgb->data);
 
         geometry_msgs::msg::PoseStamped path_poses[] = path.poses;
 
@@ -53,7 +53,7 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
                 // RCLCPP_INFO(this->get_logger(), "");
             }
         }
-        this->path_pub->publish(*path); // error invalid operator *path
+        this->path_pub->publish(path);  // error invalid operator *path
     }
 
     // Extract and print coefficients
