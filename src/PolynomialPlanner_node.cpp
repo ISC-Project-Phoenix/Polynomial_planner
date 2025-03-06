@@ -17,6 +17,7 @@ using namespace std::placeholders;
 PolynomialPlanner::PolynomialPlanner(const rclcpp::NodeOptions& options) : Node("polynomial_planner", options) {
     // delcare params
     auto random_int = this->declare_parameter("random_int", 0);
+    this->declare_parameter("camera_frame", "mid_cam_link");
 
     this->path_pub = this->create_publisher<nav_msgs::msg::Path>("/path", 5);
 
@@ -29,7 +30,7 @@ PolynomialPlanner::PolynomialPlanner(const rclcpp::NodeOptions& options) : Node(
     this->tf2_listener = std::make_unique<tf2_ros::TransformListener>(*this->tf2_buffer);
 }
 
-void PolynomialPlanner::polynomial_cb(std_msgs::msg::String::SharedPtr msg) {
+void polynomial_cb(std_msgs::msg::String::SharedPtr) {
     if (msg->empty()) {
         RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
         return;
@@ -41,8 +42,8 @@ void PolynomialPlanner::polynomial_cb(std_msgs::msg::String::SharedPtr msg) {
         for (int i = 0; i < no_coeff; i++) {
             coeff.push_back(msg->data[i]);
         }
-
-        nav_msgs::msg::Path path = backend::create_path(coeff, frame);
+        // TODO fix params
+         nav_msgs::msg::Path path = backend::create_path(coeff, frame);
 
         geometry_msgs::msg::PoseStamped path_poses[] = path.poses;
 

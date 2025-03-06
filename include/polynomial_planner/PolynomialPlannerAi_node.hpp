@@ -1,6 +1,7 @@
 #pragma once
 
 #include <opencv2/core/types.hpp>
+#include <string>
 #include <vector>
 
 #include "image_geometry/pinhole_camera_model.h"
@@ -34,7 +35,7 @@ public:
     PolynomialPlannerAi(const rclcpp::NodeOptions& options);
 
     /// subscriber callback
-    void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg,
-                                            sensor_msgs::msg::CameraInfo camera_rgb);
+    /// 'PolynomialPlannerAi::' is unnesscary
+    void polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb);
     void evaluate_polynomial(const std::vector<float>& coeffs, const std::vector<float>& x_values);
 };

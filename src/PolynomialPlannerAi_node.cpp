@@ -1,5 +1,7 @@
 #include "polynomial_planner/PolynomialPlannerAi_node.hpp"
 
+#include <string>
+
 #include "backend.cpp"
 
 // Required for doTransform
@@ -12,13 +14,17 @@
 using namespace std::placeholders;
 
 PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : Node("polynomial_planner_ai", options) {
+    // RGB_INFO PARAMETER DO NOT DELETE
+    this->declare_parameter("camera_frame", "mid_cam_link");
+
     this->rgb_info_sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
 
     this->poly_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
-        "/road/polynomial", 1,
-        [this](const std_msgs::msg::Float32MultiArray::SharedPtr msg) { this->polynomial_cb(msg, rgb_info_sub); });
+        "/road/polynomial", 1, [this](const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
+            this->polynomial_cb(msg, this->rgb_model);
+        });  ///  TODO fix paras
 
     this->path_pub = this->create_publisher<nav_msgs::msg::Path>("/path", 5);
 
@@ -29,8 +35,9 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
 }
 
 void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg,
-                                        sensor_msgs::msg::CameraInfo camera_rgb) {
-    if (msg->empty()) {
+    image_geometry::PinholeCameraModel camera_rgb) {
+    // fix msg->empty
+    if (false){
         RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
         return;
 
@@ -42,24 +49,23 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
             coeff.push_back(msg->data[i]);
         }
 
-        nav_msgs::msg::Path path = backend::create_path(coeff, camera_rgb->data);
+        std::string frame_id = this->get_parameter("camera_frame").as_string();
 
-        geometry_msgs::msg::PoseStamped path_poses[] = path.poses;
+        std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(coeff, camera_rgb, frame_id);
+        nav_msgs::msg::Path path;
 
-        bool do_logger = true;
-        if (do_logger) {
-            // TODO change path_poses.size() "size does not exist"
-            for (int i = 0; i < path_poses.size(); i++) {
-                // RCLCPP_INFO(this->get_logger(), "");
-            }
-        }
+        if (path_optional.has_value()) {
+            path = path_optional.value();
+        } else
+            return;
+
         this->path_pub->publish(path);  // error invalid operator *path
     }
 
     // Extract and print coefficients
-    RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
+    // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
     for (size_t i = 0; i < msg->data.size(); i++) {
-        RCLCPP_INFO(this->get_logger(), "Coefficient[%zu] = %.15e", i, msg->data[i]);
+        // RCLCPP_INFO(this->get_logger(), "Coefficient[%zu] = %.15e", i, msg->data[i]);
     }
 }
 
@@ -69,6 +75,6 @@ void PolynomialPlannerAi::evaluate_polynomial(const std::vector<float>& coeffs, 
         for (size_t i = 0; i < coeffs.size(); i++) {
             y += coeffs[i] * std::pow(x, i);
         }
-        RCLCPP_INFO(this->get_logger(), "P(%f) = %f", x, y);
+        // RCLCPP_INFO(this->get_logger(), "P(%f) = %f", x, y);
     }
 }
