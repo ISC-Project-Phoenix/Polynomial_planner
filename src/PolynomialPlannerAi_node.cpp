@@ -35,9 +35,9 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
 }
 
 void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg,
-    image_geometry::PinholeCameraModel camera_rgb) {
+                                        image_geometry::PinholeCameraModel camera_rgb) {
     // fix msg->empty
-    if (false){
+    if (false) {
         RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
         return;
 

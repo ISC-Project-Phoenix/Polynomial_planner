@@ -43,7 +43,7 @@ void polynomial_cb(std_msgs::msg::String::SharedPtr) {
             coeff.push_back(msg->data[i]);
         }
         // TODO fix params
-         nav_msgs::msg::Path path = backend::create_path(coeff, frame);
+        nav_msgs::msg::Path path = backend::create_path(coeff, frame);
 
         geometry_msgs::msg::PoseStamped path_poses[] = path.poses;
 

@@ -4,8 +4,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
-std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector,
-    const image_geometry::PinholeCameraModel& rgb_info_sub, std::string frame) {
+std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector, const image_geometry::PinholeCameraModel& rgb_info_sub,std::string frame) {
     // std::string_view is a string lol
     std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
 
@@ -66,7 +65,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
 // TODO: make it not die when z is too smallf
 //       or make z not too small
 std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
-    const sensor_msgs::msg::CameraInfo& rgb_info_sub) {
+                                                const sensor_msgs::msg::CameraInfo& rgb_info_sub) {
     // Rotation that rotates left 90 and backwards 90.
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};

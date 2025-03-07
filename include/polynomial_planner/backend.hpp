@@ -2,11 +2,11 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <sensor_msgs/msg/camera_info.hpp>
 #include <string_view>
 #include <vector>
 
 #include "nav_msgs/msg/path.hpp"
-#include <sensor_msgs/msg/camera_info.hpp>
 
 class Polynomial {
 public:
@@ -42,6 +42,8 @@ public:
 namespace backend {
 
 std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
-                                                         sensor_msgs::msg::CameraInfo& rgb_info_sub, std::string frame);
-std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& leftPoly, const image_geometry::PinholeCameraModel& rgb_info_sub, std::string frame);
+                                                sensor_msgs::msg::CameraInfo& rgb_info_sub, std::string frame);
+std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& leftPoly,
+                                               const image_geometry::PinholeCameraModel& rgb_info_sub,
+                                               std::string frame);
 }  // namespace backend
