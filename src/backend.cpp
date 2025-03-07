@@ -4,7 +4,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
-std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector, const image_geometry::PinholeCameraModel& rgb_info_sub,std::string frame) {
+std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector, const sensor_msgs::msg::CameraInfo& rgb_info_sub,std::string frame) {
     // std::string_view is a string lol
     std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
 
@@ -44,7 +44,6 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         for (cv::Point2d ground_points : ground_path) {
             // std::
         }
-        // how do cv types differ from ros types.
         // converting <x,y> to message type in ROS
         std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
                        [frame](const cv::Point2d& point) {

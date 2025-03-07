@@ -17,7 +17,7 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
     // RGB_INFO PARAMETER DO NOT DELETE
     this->declare_parameter("camera_frame", "mid_cam_link");
 
-    this->rgb_info_sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
+    this->rgb_model_sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
 
@@ -35,7 +35,7 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
 }
 
 void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg,
-                                        image_geometry::PinholeCameraModel camera_rgb) {
+    sensor_msgs::msg::CameraInfo camera_rgb) {
     // fix msg->empty
     if (false) {
         RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
