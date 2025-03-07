@@ -7,7 +7,7 @@
 
 std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector,
                                                         image_geometry::PinholeCameraModel rgb_info_sub,
-                                                        std::string frame) {
+                                                        std::string_view frame) {
     // std::string_view is a string lol
     std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
 
@@ -49,10 +49,11 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         }
         // converting <x,y> to message type in ROS
         std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
-                       [frame](const cv::Point2d& point) {
+                       [&frame](const cv::Point2d& point) {
                            geometry_msgs::msg::PoseStamped pose{};
                            // frame = "redto0 isn't sure if we use this";
-                           pose.header.frame_id = frame;
+                           // redto0 is SURE that we use this update and fix ASAP
+                           pose.header.frame_id = frame;  // literally is "notaemptystring"
                            pose.pose.position.x = point.x;
                            pose.pose.position.y = point.y;
 

@@ -50,13 +50,16 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
             coeff.push_back(msg->data[i]);
         }
 
-        std::string frame_id = this->get_parameter("camera_frame").as_string();
-
+        //std::string frame_id = this->get_parameter("camera_frame").as_string();
+        //std::string frame_id = "notemptystring";
+        auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
         std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(coeff, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
 
         if (path_optional.has_value()) {
             path = path_optional.value();
+            path.header.frame_id = this->get_parameter(std::string("camera_frame")).as_string();
+
         } else
             return;
 

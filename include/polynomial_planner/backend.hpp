@@ -45,5 +45,5 @@ namespace backend {
 std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
                                                 image_geometry::PinholeCameraModel rgb_info_sub);
 std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& leftPoly,
-                                               image_geometry::PinholeCameraModel rgb_info_sub, std::string frame);
+                                               image_geometry::PinholeCameraModel rgb_info_sub, std::string_view frame);
 }  // namespace backend
