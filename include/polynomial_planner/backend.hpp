@@ -6,6 +6,7 @@
 #include <string_view>
 #include <vector>
 
+#include "image_geometry/pinhole_camera_model.h"
 #include "nav_msgs/msg/path.hpp"
 
 class Polynomial {
@@ -42,8 +43,7 @@ public:
 namespace backend {
 
 std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
-                                                sensor_msgs::msg::CameraInfo& rgb_info_sub, std::string frame);
+                                                image_geometry::PinholeCameraModel rgb_info_sub);
 std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& leftPoly,
-                                               const image_geometry::PinholeCameraModel& rgb_info_sub,
-                                               std::string frame);
+                                               image_geometry::PinholeCameraModel rgb_info_sub, std::string frame);
 }  // namespace backend

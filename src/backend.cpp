@@ -3,8 +3,11 @@
 #include <algorithm>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "image_geometry/pinhole_camera_model.h"
 
-std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector, const sensor_msgs::msg::CameraInfo& rgb_info_sub,std::string frame) {
+std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector,
+                                                        image_geometry::PinholeCameraModel rgb_info_sub,
+                                                        std::string frame) {
     // std::string_view is a string lol
     std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
 
@@ -37,7 +40,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     } else {
         // Convert from cv types to nav::msg
         // too few args
-        std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub.cameraInfo());
+        std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
 
         nav_msgs::msg::Path msg{};
         // msg.header.frame_id = frame;
@@ -63,8 +66,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
 // why are the pointer things the way they are
 // TODO: make it not die when z is too smallf
 //       or make z not too small
-std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
-                                                const sensor_msgs::msg::CameraInfo& rgb_info_sub) {
+std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
+                                                         image_geometry::PinholeCameraModel rgb_info_sub) {
     // Rotation that rotates left 90 and backwards 90.
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};
@@ -75,8 +78,8 @@ std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels
 
     for (const cv::Point2d& pixel : pixels) {
         // gotta rectify the pixel before we raycast
-        cv::Point2d rectPixel = rgb_info_sub->rgb_model.rectifyPoint(pixel);
-        cv::Point3d ray = rgb_info_sub->rgb_model.projectPixelTo3dRay(rectPixel);
+        cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
+        cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(rectPixel);
 
         // ask zach for the trig, extend ray to the floor.
         float divisor = ray.z / -0.6;
