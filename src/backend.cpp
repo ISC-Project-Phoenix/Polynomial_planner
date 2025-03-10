@@ -40,7 +40,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     } else {
         // Convert from cv types to nav::msg
         // too few args
-        std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
+        std::vector<cv::Point3d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
 
         nav_msgs::msg::Path msg{};
         // msg.header.frame_id = frame;
@@ -56,6 +56,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
                            pose.header.frame_id = frame;  // literally is "notaemptystring"
                            pose.pose.position.x = point.x;
                            pose.pose.position.y = point.y;
+                           pose.pose.position.z = point.z;
 
                            return pose;
                        });
@@ -67,13 +68,13 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
 // why are the pointer things the way they are
 // TODO: make it not die when z is too smallf
 //       or make z not too small
-std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
+std::vector<cv::Point3d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
                                                          image_geometry::PinholeCameraModel rgb_info_sub) {
     // Rotation that rotates left 90 and backwards 90.
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};
     // set the Roll Pitch YAW
-    optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
+    optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
 
     std::vector<cv::Point2d> rwpoints;
 
@@ -83,7 +84,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(rectPixel);
 
         // ask zach for the trig, extend ray to the floor.
-        float divisor = ray.z / -0.6;
+        float divisor = ray.z / 0.6;
         ray.x = ray.x / divisor;
         ray.y = ray.y / divisor;
         ray.z = ray.z / divisor;
@@ -94,7 +95,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
 
         //return type world_vec, use this is
 
-        cv::Point2d dvector(world_vec.x(), world_vec.y());
+        cv::Point3d dvector(world_vec.x(), world_vec.y(). world_vec.z());
 
         // push back vectors
         rwpoints.push_back(dvector);
