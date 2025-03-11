@@ -75,6 +75,7 @@ std::vector<cv::Point3d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     tf2::Quaternion optical_to_ros{};
     // set the Roll Pitch YAW
     optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
+    optical_to_ros.setRPY(0, 0.0, -M_PI / 2);
 
     std::vector<cv::Point2d> rwpoints;
 
