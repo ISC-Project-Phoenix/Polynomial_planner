@@ -52,6 +52,7 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
 
         //std::string frame_id = this->get_parameter("camera_frame").as_string();
         //std::string frame_id = "notemptystring";
+        // TODO camera frame_id is wrong
         auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
         std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(coeff, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
@@ -59,17 +60,14 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
         if (path_optional.has_value()) {
             path = path_optional.value();
             path.header.frame_id = this->get_parameter(std::string("camera_frame")).as_string();
-
-        } else
-            return;
-
-        this->path_pub->publish(path);  // error invalid operator *path
-    }
-
-    // Extract and print coefficients
-    // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
-    for (size_t i = 0; i < msg->data.size(); i++) {
-        // RCLCPP_INFO(this->get_logger(), "Coefficient[%zu] = %.15e", i, msg->data[i]);
+            this->path_pub->publish(path);  // error invalid operator *path
+                                            // Extract and print coefficients
+            // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
+            for (size_t i = 0; i < msg->data.size(); i++) {
+                // RCLCPP_INFO(this->get_logger(), "Coefficient[%zu] = %.15e", i, msg->data[i]);
+            }
+        }
+        return;
     }
 }
 

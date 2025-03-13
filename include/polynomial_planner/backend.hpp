@@ -37,6 +37,7 @@ public:
             // todo finish?
             result += vect[i] * (power + 1) * pow(x, power);  // a[n] * n * x ^ (n - 1)
         }
+        return result;
     }
 };
 

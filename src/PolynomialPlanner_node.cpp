@@ -51,7 +51,7 @@ void polynomial_cb(std_msgs::msg::String::SharedPtr) {
         bool do_logger = true;
         if (do_logger) {
             for (int i = 0; i < path_poses.size(); i++) {
-                RCLCPP_INFO(this->get_logger(), "");
+                RCLCPP_INFO(this->get_logger(), " we have polynomial");
             }
         }
         this->path_pub->publish(*path);

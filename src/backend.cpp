@@ -20,17 +20,18 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     auto leftPoly = new Polynomial(leftPolyVector);
 
     // interval for polynomial
-    float max = 280;         // artificial event horizon
+    float max = 256;         // artificial event horizon,
+                             // the x value in which path points are no longer allowed to cross.
     float interval = 3;      // stepping x value up by 3camera px on each iteration
     float start = 475;       // bottom of frame
-    float threshold = 15.0;  // min dist between points
+    float threshold = 10.0;  // min dist between points
 
-    float dist = 0;
+    float dist = 0;  // the value between the last published point and the current point
     for (int x = start; x > max; x -= interval) {
         dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
 
         if (dist > threshold) {
-            cam_path.push_back(cv::Point2d(x, leftPoly->poly(x)));
+            cam_path.push_back(cv::Point2d(x + 256, leftPoly->poly(x + 256)));
             dist = 0;
         }
     }
@@ -45,8 +46,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         nav_msgs::msg::Path msg{};
         // msg.header.frame_id = frame;
         // for (cv::Point2d ground_points : ground_path) {
-            // std::
-       //  }
+        // std::
+        //  }
         // converting <x,y> to message type in ROS
         std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
                        [&frame](const cv::Point2d& point) {
@@ -66,7 +67,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
 }
 
 // why are the pointer things the way they are
-// TODO: make it not die when z is too smallf
+// TODO: make it not die when z is too small
 //       or make z not too small
 std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
                                                          image_geometry::PinholeCameraModel rgb_info_sub) {
@@ -75,7 +76,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     tf2::Quaternion optical_to_ros{};
     // set the Roll Pitch YAW
     optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
-    optical_to_ros.setRPY(0, 0.0, -M_PI / 2);
+    // optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
 
     std::vector<cv::Point2d> rwpoints;
 
@@ -85,18 +86,18 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(rectPixel);
 
         // ask zach for the trig, extend ray to the floor.
-        float divisor = ray.z / 0.6;
+        float divisor = ray.z / -0.6;
         ray.x = ray.x / divisor;
         ray.y = ray.y / divisor;
         ray.z = ray.z / divisor;
         // ray /= ray.z / -0.6;
-        // ray.setZ(ray.getZ() * -1); we don't really care abt z, since it -will- *should* always just be cameraHeight
+        ray.z = (ray.z * -1);  // we don't really care abt z, since it -will- *should* always just be cameraHeight
         tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
         tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
 
         //return type world_vec, use this is
 
-        cv::Point2d dvector(world_vec.x(), world_vec.y());
+        cv::Point2d dvector(-world_vec.x(), world_vec.y());
 
         // push back vectors
         rwpoints.push_back(dvector);
