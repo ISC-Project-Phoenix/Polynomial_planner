@@ -20,10 +20,10 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     auto leftPoly = new Polynomial(leftPolyVector);
 
     // interval for polynomial
-    float max = 256;         // artificial event horizon,
+    float max = 20;          // artificial event horizon,
                              // the x value in which path points are no longer allowed to cross.
     float interval = 3;      // stepping x value up by 3camera px on each iteration
-    float start = 475;       // bottom of frame
+    float start = 220;       // bottom of frame
     float threshold = 10.0;  // min dist between points
 
     float dist = 0;  // the value between the last published point and the current point
@@ -31,8 +31,24 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
 
         if (dist > threshold) {
-            cam_path.push_back(cv::Point2d(x + 256, leftPoly->poly(x + 256)));
+            int translate = 480 - 224;
+            float camX = leftPoly->poly(x + translate);
+            float camY = x + translate;
+            if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
+                // CV point should be x,y
+                // the poly is P(y)
+                // translate should apply to the Y values?
+                // cam_path.push_back(cv::Point2d(camX, camY));
+            }
             dist = 0;
+        }
+    }
+
+    for (int i = 55; i < 200; i++) {
+        float camX = 320;
+        float camY = (i) + 240;
+        if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
+            cam_path.push_back(cv::Point2d(camY, camX));
         }
     }
 
@@ -77,6 +93,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     // set the Roll Pitch YAW
     optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
     // optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
+    // optical_to_ros.setRPY(0.0, 0.0, 0.0);
 
     std::vector<cv::Point2d> rwpoints;
 
@@ -91,13 +108,14 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         ray.y = ray.y / divisor;
         ray.z = ray.z / divisor;
         // ray /= ray.z / -0.6;
-        ray.z = (ray.z * -1);  // we don't really care abt z, since it -will- *should* always just be cameraHeight
+        // ray.z = (ray.z * -1);  // we don't really care abt z, since it -will- *should* always just be cameraHeight
+        // tf2::Vector3 tf_vec{ray.z, -ray.x, -ray.y};
         tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
         tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
 
         //return type world_vec, use this is
 
-        cv::Point2d dvector(-world_vec.x(), world_vec.y());
+        cv::Point2d dvector(-world_vec.y(), world_vec.x());
 
         // push back vectors
         rwpoints.push_back(dvector);
