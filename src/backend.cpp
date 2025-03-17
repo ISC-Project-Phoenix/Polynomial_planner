@@ -38,7 +38,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
                 // CV point should be x,y
                 // the poly is P(y)
                 // translate should apply to the Y values?
-                // cam_path.push_back(cv::Point2d(camX, camY));
+                cam_path.push_back(cv::Point2d(camX, camY));
             }
             dist = 0;
         }
@@ -48,7 +48,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         float camX = 320;
         float camY = (i) + 240;
         if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-            cam_path.push_back(cv::Point2d(camY, camX));
+            // cam_path.push_back(cv::Point2d(camY, camX));
         }
     }
 
@@ -103,7 +103,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(rectPixel);
 
         // ask zach for the trig, extend ray to the floor.
-        float divisor = ray.z / -0.6;
+        float divisor = ray.z /1;
         ray.x = ray.x / divisor;
         ray.y = ray.y / divisor;
         ray.z = ray.z / divisor;
@@ -115,7 +115,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
 
         //return type world_vec, use this is
 
-        cv::Point2d dvector(-world_vec.y(), world_vec.x());
+        cv::Point2d dvector(world_vec.y(), world_vec.x());
 
         // push back vectors
         rwpoints.push_back(dvector);
