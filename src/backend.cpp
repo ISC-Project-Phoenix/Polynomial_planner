@@ -32,6 +32,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
 
         if (dist > threshold) {
             int translate = 480 - 224;
+            // translate =0;
             float camX = leftPoly->poly(x + translate);
             float camY = x + translate;
             if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
@@ -103,8 +104,8 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         // gotta rectify the pixel before we raycast
         pixel.y += 120;
         pixel.x += 320;
-        cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
-        cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(rectPixel);
+        // cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
+        cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(pixel);
 
         // -- CAMERA COORDINATES --
         //      positive x = +X TO CAMERA
