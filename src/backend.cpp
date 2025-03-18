@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "cv_bridge/cv_bridge.h"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
 
@@ -91,29 +92,40 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};
     // set the Roll Pitch YAW
-    optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
-    // optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
+    // optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
+    optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
     // optical_to_ros.setRPY(0.0, 0.0, 0.0);
 
     std::vector<cv::Point2d> rwpoints;
 
     for (const cv::Point2d& pixel : pixels) {
         // gotta rectify the pixel before we raycast
-        cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
-        cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(rectPixel);
+        // cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
+        // cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(rectPixel);
 
-        // ask zach for the trig, extend ray to the floor.
-        float divisor = ray.z /1;
-        ray.x = ray.x / divisor;
-        ray.y = ray.y / divisor;
-        ray.z = ray.z / divisor;
-        // ray /= ray.z / -0.6;
-        // ray.z = (ray.z * -1);  // we don't really care abt z, since it -will- *should* always just be cameraHeight
-        // tf2::Vector3 tf_vec{ray.z, -ray.x, -ray.y};
-        tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
-        tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
+        if (!rgb_info_sub.initialized()) {
+            continue;
+        }
 
-        //return type world_vec, use this is
+        // correct rgb?
+        cv::Point2d center = rgb_info_sub.rectifyPoint(pixel);
+
+        // Project pixel to camera space
+        auto ray = rgb_info_sub.projectPixelTo3dRay(center);
+        // The oak-d uses shorts in mm, sim uses f32 in m
+        float dist = depth.type() == 2 ? (float)depth.at<short>(center) / 1000 : depth.at<float>(center);
+
+        // If depth unavailable, then skip
+        if (dist == INFINITY || dist >= 10 || dist <= 0) {
+            continue;
+        }
+
+        // Just resize the ray to be a vector at the distance of the depth pixel. This is in camera space
+        auto point_3d = dist / cv::norm(ray) * ray;
+
+        // Convert from camera space to ros coordinates ("World" but wrt camera mount)
+        tf2::Vector3 tf_vec{point_3d.x, point_3d.y, point_3d.z};
+        auto world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
 
         cv::Point2d dvector(world_vec.y(), world_vec.x());
 
