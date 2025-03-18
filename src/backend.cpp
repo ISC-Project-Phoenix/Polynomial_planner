@@ -48,9 +48,11 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         float camX = 320;
         float camY = (i) + 240;
         if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-            // cam_path.push_back(cv::Point2d(camY, camX));
+            // cam_path.push_back(cv::Point2d(camX, camY));
         }
     }
+
+    
 
     if (cam_path.empty()) {
         return std::nullopt;
@@ -96,26 +98,34 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     // optical_to_ros.setRPY(0.0, 0.0, 0.0);
 
     std::vector<cv::Point2d> rwpoints;
-
-    for (const cv::Point2d& pixel : pixels) {
+    
+    for (cv::Point2d& pixel : pixels) {
         // gotta rectify the pixel before we raycast
+        pixel.y += 120;
+        pixel.x += 320;
         cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
         cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(rectPixel);
 
+        // -- CAMERA COORDINATES --
+        //      positive x = +X TO CAMERA
+        //      positive y = STRAIGHT TO GROUND
+        //      positive z = OUT OF CAMERA
+        //      hopefully
+
         // ask zach for the trig, extend ray to the floor.
-        float divisor = ray.z /1;
+        float divisor = ray.y / 0.6;
         ray.x = ray.x / divisor;
         ray.y = ray.y / divisor;
         ray.z = ray.z / divisor;
         // ray /= ray.z / -0.6;
         // ray.z = (ray.z * -1);  // we don't really care abt z, since it -will- *should* always just be cameraHeight
-        // tf2::Vector3 tf_vec{ray.z, -ray.x, -ray.y};
-        tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
-        tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
+        tf2::Vector3 tf_vec{ray.z, -ray.x, -ray.y};
+        //tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
+        //tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
 
         //return type world_vec, use this is
 
-        cv::Point2d dvector(world_vec.y(), world_vec.x());
+        cv::Point2d dvector(tf_vec.x(), tf_vec.y());
 
         // push back vectors
         rwpoints.push_back(dvector);
