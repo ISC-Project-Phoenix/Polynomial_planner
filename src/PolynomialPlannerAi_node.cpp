@@ -49,7 +49,7 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
         for (int i = 0; i < no_coeff; i++) {
             coeff.push_back(msg->data[i]);
         }
-        
+
         std::string p = std::to_string(camera_rgb.cx());
         RCLCPP_INFO(this->get_logger(), p.c_str());
 

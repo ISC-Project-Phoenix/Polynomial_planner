@@ -53,8 +53,6 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         }
     }
 
-    
-
     if (cam_path.empty()) {
         return std::nullopt;
     } else {
@@ -99,7 +97,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     // optical_to_ros.setRPY(0.0, 0.0, 0.0);
 
     std::vector<cv::Point2d> rwpoints;
-    
+
     for (cv::Point2d& pixel : pixels) {
         // gotta rectify the pixel before we raycast
         pixel.y += 120;
