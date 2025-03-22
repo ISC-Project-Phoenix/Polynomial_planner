@@ -31,7 +31,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
 
         if (dist > threshold) {
-            int translate = 480 - 224;
+            int translate = 0;
             // translate =0;
             float camX = leftPoly->poly(x + translate);
             float camY = x + translate;
