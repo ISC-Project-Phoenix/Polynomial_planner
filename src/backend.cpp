@@ -20,10 +20,10 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     auto leftPoly = new Polynomial(leftPolyVector);
 
     // interval for polynomial
-    float max = 20;          // artificial event horizon,
+    float max = 480 - 480 *0.45;          // artificial event horizon,
                              // the x value in which path points are no longer allowed to cross.
     float interval = 3;      // stepping x value up by 3camera px on each iteration
-    float start = 220;       // bottom of frame
+    float start = 480;       // bottom of frame
     float threshold = 10.0;  // min dist between points
 
     float dist = 0;  // the value between the last published point and the current point
@@ -31,7 +31,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
 
         if (dist > threshold) {
-            int translate = 0;
+            int translate = 0.0;
             // translate =0;
             float camX = leftPoly->poly(x + translate);
             float camY = x + translate;
@@ -92,7 +92,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};
     // set the Roll Pitch YAW
-    optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
+    // optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
     // optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
     // optical_to_ros.setRPY(0.0, 0.0, 0.0);
 
