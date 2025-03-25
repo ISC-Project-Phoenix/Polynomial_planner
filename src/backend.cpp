@@ -14,17 +14,15 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     // take in Polynomial
     // ros polynoial take in code...
     // transfer to Polynomial class;
-    // float is_right_valid = false;
-    // float is_left_valid = false;
 
     auto leftPoly = new Polynomial(leftPolyVector);
 
     // interval for polynomial
-    float max = 480 - 480 *0.45;          // artificial event horizon,
-                             // the x value in which path points are no longer allowed to cross.
-    float interval = 3;      // stepping x value up by 3camera px on each iteration
-    float start = 480;       // bottom of frame
-    float threshold = 10.0;  // min dist between points
+    float max = 480 - 480 * 0.40;    // artificial event horizon, 45
+                                     // the x value in which path points are no longer allowed to cross.
+    float interval = 3;              // stepping x value up by 3camera px on each iteration
+    float start = 480 - 480 * 0.10;  // bottom of frame
+    float threshold = 10.0;          // min dist between points
 
     float dist = 0;  // the value between the last published point and the current point
     for (int x = start; x > max; x -= interval) {
@@ -46,7 +44,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     }
 
     for (int i = 55; i < 200; i++) {
-        float camX = 320;
+        float camX = 640;
         float camY = (i) + 240;
         if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
             // cam_path.push_back(cv::Point2d(camX, camY));
@@ -92,9 +90,10 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};
     // set the Roll Pitch YAW
+    optical_to_ros.setRPY(0.0, 0.0, 0.0);
     // optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
-    // optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
-    // optical_to_ros.setRPY(0.0, 0.0, 0.0);
+    optical_to_ros.setRPY( -M_PI / 2, 0.0,  -M_PI / 2);
+
 
     std::vector<cv::Point2d> rwpoints;
 
@@ -118,9 +117,9 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         ray.z = ray.z / divisor;
         // ray /= ray.z / -0.6;
         // ray.z = (ray.z * -1);  // we don't really care abt z, since it -will- *should* always just be cameraHeight
-        tf2::Vector3 tf_vec{ray.z, -ray.x, -ray.y};
-        //tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
-        //tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
+        // tf2::Vector3 tf_vec{ray.z, -ray.x, -ray.y};
+        tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
+        tf_vec = tf2::quatRotate(optical_to_ros, tf_vec);
 
         //return type world_vec, use this is
 

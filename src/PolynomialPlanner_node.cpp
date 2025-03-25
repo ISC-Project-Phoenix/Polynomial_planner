@@ -15,24 +15,29 @@
 using namespace std::placeholders;
 
 PolynomialPlanner::PolynomialPlanner(const rclcpp::NodeOptions& options) : Node("polynomial_planner", options) {
-    // delcare params
-    auto random_int = this->declare_parameter("random_int", 0);
+    // RGB_INFO PARAMETER DO NOT DELETE
     this->declare_parameter("camera_frame", "mid_cam_link");
 
-    this->path_pub = this->create_publisher<nav_msgs::msg::Path>("/path", 5);
-
-    // run once get pointer never used again
     this->rgb_info_sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
 
+    this->poly_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
+        "/road/polynomial", 1, [this](const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
+            this->polynomial_cb(msg, this->rgb_model);
+        });  ///  TODO fix paras
+
+    this->path_pub = this->create_publisher<nav_msgs::msg::Path>("/path", 5);
+
+    RCLCPP_INFO(this->get_logger(), "PolynomialPlannerAi Node Started! Waiting for polynomial data...");
     // TF2 things
     this->tf2_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     this->tf2_listener = std::make_unique<tf2_ros::TransformListener>(*this->tf2_buffer);
 }
 
-void polynomial_cb(std_msgs::msg::String::SharedPtr) {
-    if (msg->empty()) {
+void polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb) {
+    // fix msg->empty
+    if (false) {
         RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
         return;
 
@@ -43,18 +48,84 @@ void polynomial_cb(std_msgs::msg::String::SharedPtr) {
         for (int i = 0; i < no_coeff; i++) {
             coeff.push_back(msg->data[i]);
         }
-        // TODO fix params
-        nav_msgs::msg::Path path = backend::create_path(coeff, frame);
 
-        geometry_msgs::msg::PoseStamped path_poses[] = path.poses;
+        std::string p = std::to_string(camera_rgb.cx());
+        RCLCPP_INFO(this->get_logger(), p.c_str());
 
-        bool do_logger = true;
-        if (do_logger) {
-            for (int i = 0; i < path_poses.size(); i++) {
-                RCLCPP_INFO(this->get_logger(), " we have polynomial");
+        //std::string frame_id = this->get_parameter("camera_frame").as_string();
+        //std::string frame_id = "notemptystring";
+        // TODO camera frame_id is wrong
+        auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
+        std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(coeff, camera_rgb, frame_id);
+        nav_msgs::msg::Path path;
+
+        if (path_optional.has_value()) {
+            path = path_optional.value();
+            path.header.frame_id = this->get_parameter(std::string("camera_frame")).as_string();
+            this->path_pub->publish(path);  // error invalid operator *path
+                                            // Extract and print coefficients
+            // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
+            for (size_t i = 0; i < msg->data.size(); i++) {
+                // RCLCPP_INFO(this->get_logger(), "Coefficient[%zu] = %.15e", i, msg->data[i]);
             }
         }
-        this->path_pub->publish(*path);
+        return;
+    }
+}
+
+void polynomial_pb(std_msgs::msg::Float32MultiArray::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb) {
+    // fix msg->empty
+    if (false) {
+        RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
+        return;
+
+    } else {
+        std::vector<float> coeff{};
+        int no_coeff = msg->data.size();
+
+        for (int i = 0; i < no_coeff; i++) {
+            coeff.push_back(msg->data[i]);
+        }
+
+        std::string p = std::to_string(camera_rgb.cx());
+        RCLCPP_INFO(this->get_logger(), p.c_str());
+
+        //std::string frame_id = this->get_parameter("camera_frame").as_string();
+        //std::string frame_id = "notemptystring";
+        // TODO camera frame_id is wrong
+        auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
+        std::optional<nav_msgs::msg::Path> ground_path = backend::cameraPixelToGroundPos(coeff, camera_rgb, frame_id);
+        nav_msgs::msg::Path path;
+
+        if (ground_path.has_value()) {
+            // Convert from cv types to nav::msg
+            nav_msgs::msg::Path msg{};
+            // msg.header.frame_id = frame;
+            // for (cv::Point2d ground_points : ground_path) {
+            // std::
+            //  }
+            // converting <x,y> to message type in ROS
+            std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
+                           [&frame](const cv::Point2d& point) {
+                               geometry_msgs::msg::PoseStamped pose{};
+                               // frame = "redto0 isn't sure if we use this";
+                               // redto0 is SURE that we use this update and fix ASAP
+                               pose.header.frame_id = frame;  // literally is "notaemptystring"
+                               pose.pose.position.x = point.x;
+                               pose.pose.position.y = point.y;
+                               // pose.pose.position.z = point.z;
+
+                               return pose;
+                           });
+            path.header.frame_id = this->get_parameter(std::string("camera_frame")).as_string();
+            this->path_pub->publish(*msg);  // error invalid operator *path
+                                            // Extract and print coefficients
+            // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
+            for (size_t i = 0; i < msg->data.size(); i++) {
+                // RCLCPP_INFO(this->get_logger(), "Coefficient[%zu] = %.15e", i, msg->data[i]);
+            }
+        }
+        return;
     }
 }
 
