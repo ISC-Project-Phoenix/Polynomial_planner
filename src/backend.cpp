@@ -31,7 +31,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         if (dist > threshold) {
             int translate = 0.0;
             // translate =0;
-            float camX = leftPoly->poly(x + translate);
+            float camX = leftPoly->poly(x);
             float camY = x + translate;
             if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
                 // CV point should be x,y
