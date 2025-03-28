@@ -4,6 +4,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
+#include <polynomial_planner/polyfit.hpp>
 
 std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector,
                                                         image_geometry::PinholeCameraModel rgb_info_sub,
@@ -11,9 +12,14 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     // std::string_view is a string lol
     std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
 
+    // take in 
     // take in Polynomial
     // ros polynoial take in code...
     // transfer to Polynomial class;
+                                                        
+    // takes in two arrays of x, y, and degree. 
+    // returns coefficients
+    // polyfit::FitPolynomial();
 
     auto leftPoly = new Polynomial(leftPolyVector);
 
@@ -92,8 +98,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     // set the Roll Pitch YAW
     optical_to_ros.setRPY(0.0, 0.0, 0.0);
     // optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
-    optical_to_ros.setRPY( -M_PI / 2, 0.0,  -M_PI / 2);
-
+    optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
 
     std::vector<cv::Point2d> rwpoints;
 

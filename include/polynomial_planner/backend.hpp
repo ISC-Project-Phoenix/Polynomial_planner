@@ -2,10 +2,10 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <polynomial_planner/polyfit.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <string_view>
 #include <vector>
-#include <polynomial_planner/polyfit.hpp>
 
 #include "image_geometry/pinhole_camera_model.h"
 #include "nav_msgs/msg/path.hpp"
