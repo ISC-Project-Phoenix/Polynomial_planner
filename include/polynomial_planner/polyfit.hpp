@@ -8,7 +8,7 @@ namespace polyfit {
 
 // Fits a polynomial of the requested degree to the given x, y values and
 // returns the coefficients for {x^0, ... x^{degree}}.
-std::vector<double> FitPolynomial(const std::vector<double>& x, const std::vector<double>& y, int degree) {
+inline std::vector<double> FitPolynomial(const std::vector<double>& x, const std::vector<double>& y, int degree) {
     assert(x.size() == y.size());
     // This maps the doubles in x to something that behaves like a const
     // Eigen::VectorXd object so we can use Eigen functionality on the underlying

@@ -1,54 +1,143 @@
 #include "polynomial_planner/backend.hpp"
 
 #include <algorithm>
+#include <polynomial_planner/polyfit.hpp>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
-#include <polynomial_planner/polyfit.hpp>
 
-std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector,
+std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>& left_contours,
+                                                        std::vector<cv::Point2d>& right_contours,
                                                         image_geometry::PinholeCameraModel rgb_info_sub,
                                                         std::string_view frame) {
-    // std::string_view is a string lol
-    std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
-
-    // take in 
+    // take in coutours
     // take in Polynomial
     // ros polynoial take in code...
     // transfer to Polynomial class;
-                                                        
-    // takes in two arrays of x, y, and degree. 
+
+    // takes in two arrays of x, y, and degree.pushback();
     // returns coefficients
     // polyfit::FitPolynomial();
 
-    auto leftPoly = new Polynomial(leftPolyVector);
+    // std::string_view is a string lol
+    std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
 
+    std::vector<float>& left_contours_ground;
+
+    int width = rgb_info_sub.fullResolution().width;
+    int height = rgb_info_sub.fullResolution().height;
+    float max_left = 0;
+    float max_right = 0;
+    float min_left = height;
+    float min_right = height;
+    bool is_right_valid = true;
+    bool is_left_valid = true;
+    Polynomial rightPoly;
+    Polynomial leftPoly;
+    std::vector<cv::Point2d>& left_contours_ground;
+    std::vector<cv::Point2d>& right_contours_ground;
+
+    if (is_left_valid) {
+
+    }
+    if (is_right_valid) {
+
+    }
+
+    // Loop through each point and convert to ground position
+    if (is_left_valid) {
+        for (const auto& element : left_contours) {
+             // convert element to ground and push back to ground array
+            cv::Point2d temp = cameraPixelToGroundPos(element, rgb_info_sub);
+            if (temp.y < min_left) min_left = temp.y;
+            if (temp.y > max_left) max_left = temp.y;
+            left_contours_ground.push_back(temp);
+        }
+        // run regression on ground contours
+    }
+    // Loop through each point and convert to ground position
+    if (is_right_valid) {
+        for (const auto& element : right_contours) {
+            // convert element to ground and push back to ground array
+            cv::Point2d temp = cameraPixelToGroundPos(element, rgb_info_sub);
+            if (temp.y < min_right) min_right = temp.y;
+            if (temp.y > max_right) max_right = temp.y;
+            right_contours_ground.push_back(temp);
+        }
+        // run regression on ground contours
+    }
     // interval for polynomial
     float max = 480 - 480 * 0.40;    // artificial event horizon, 45
                                      // the x value in which path points are no longer allowed to cross.
     float interval = 3;              // stepping x value up by 3camera px on each iteration
     float start = 480 - 480 * 0.10;  // bottom of frame
-    float threshold = 10.0;          // min dist between points
+    float threshold = 10.0;          // min dist between points (in pixels)
+    float projection = 2.3;          // projection distance in kartspace
 
     float dist = 0;  // the value between the last published point and the current point
     for (int x = start; x > max; x -= interval) {
         dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
 
         if (dist > threshold) {
-            int translate = 0.0;
-            // translate =0;
-            float camX = leftPoly->poly(x);
-            float camY = x + translate;
-            if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-                // CV point should be x,y
-                // the poly is P(y)
-                // translate should apply to the Y values?
-                cam_path.push_back(cv::Point2d(camX, camY));
+            // TODO figure out how to null value
+            if (is_left_valid) {
+                // do left poly math;
+                // <y, -x>
+                float dx = leftPoly->polyDirvative(x);
+                // calulate dx were dy is 1
+                // becuase I dont want to use a wrapper class
+                float dy = 1;
+                // set dy to 1
+                float l = std::sqrt(dx * dx + dy * dy);
+                // find the magnitude
+                dx = dx / l;                     // normalize
+                dy = dy / l;                     // normalize
+                float p_x = x;                   // define x
+                float P_y = leftPoly->poly(p_x);  // define y
+                float camX = (p_x + projection * dy);     // project x
+                float camY = (P_y - projection * dx);     // project y
+                // TODO refractor with Camera Space pixels
+                // OR do check if distance is greater than 8ish meters
+                if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
+                    cam_path.push_back(cv::Point2d(camX, camY));
+                }
+                // return vector as < y, -x >
             }
+            // reset the distance counter
             dist = 0;
         }
     }
+    for (int x = start; x > max; x -= interval) {
+        dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
 
+        if (dist > threshold) {
+            // TODO figure out how to null value
+            if (is_right_valid) {
+                // do right poly math
+                // <-y, x>
+                // same steps different numbers
+                float dx = rightPoly.polyDirvative(x);
+                float dy = 1;
+                float l = std::sqrt(dx * dx + dy * dy);
+                l = std::hypot(dx, dy);
+                dx = dx / l;
+                dy = dy / l;
+                float p_x = x;
+                float p_y = leftPoly.poly(x);
+                float camX = (p_x - 7 * dy);
+                float camY = (p_y + 7 * dx);
+                // TODO refractor with Camera Space pixels
+                // OR do check if distance is greater than 8ish meters
+                if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
+                    cam_path.push_back(cv::Point2d(camX, camY));
+                }
+                // return vector as < -y , x >
+            }
+            // reset the distance counter
+            dist = 0;
+        }
+    }
+    // Debug looper
     for (int i = 55; i < 200; i++) {
         float camX = 640;
         float camY = (i) + 240;
@@ -56,7 +145,6 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
             // cam_path.push_back(cv::Point2d(camX, camY));
         }
     }
-
     if (cam_path.empty()) {
         return std::nullopt;
     } else {
@@ -86,7 +174,6 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
         return msg;
     }
 }
-
 // why are the pointer things the way they are
 // TODO: make it not die when z is too small
 //       or make z not too small

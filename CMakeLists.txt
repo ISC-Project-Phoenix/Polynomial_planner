@@ -19,6 +19,8 @@ find_package(tf2_geometry_msgs REQUIRED)
 # OpenCV TODO_EXTRA
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(phnx_msgs REQUIRED)
 
 
 # Node 2
@@ -43,6 +45,8 @@ set(dependencies
         OpenCV
         # for camera space transformation
         image_geometry
+        # for custom msgs
+        phnx_msgs
 )
 
 # Link ros dependencies

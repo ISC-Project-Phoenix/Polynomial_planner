@@ -13,6 +13,8 @@
     <depend>rclcpp</depend>
     <depend>rclpy</depend>
     <depend>std_msgs</depend>
+    <depend>phnx_msgs</depend>
+
 
     <!--Messages TODO_EXTRA-->
     <depend>ackermann_msgs</depend>
@@ -21,9 +23,13 @@
     <depend>geometry_msgs</depend>
     <depend>tf2_geometry_msgs</depend>
     <depend>image_geometry</depend>
+    <depend>rosidl_interface_packages</depend>
+    <build_depend>rosidl_default_generators</build_depend>
+    <exec_depend>rosidl_default_runtime</exec_depend>
+
 
     <!--OpenCv Things TODO_EXTRA-->
-    <depend>cv_bridge</depend>
+    <depend>cv_bridge</depend>find_package(phnx_msgs REQUIRED)
     <depend>libopencv-dev</depend>
 
     <test_depend>ament_lint_auto</test_depend>
@@ -35,8 +41,9 @@
     <test_depend>ament_clang_tidy</test_depend>
     <test_depend>ament_cmake_gtest</test_depend>
     <test_depend>ament_cmake_nose</test_depend>
-
+    <member_of_group>rosidl_interface_packages</member_of_group>
     <export>
         <build_type>ament_cmake</build_type>
+        
     </export>
 </package>

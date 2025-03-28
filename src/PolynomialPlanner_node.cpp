@@ -22,8 +22,12 @@ PolynomialPlanner::PolynomialPlanner(const rclcpp::NodeOptions& options) : Node(
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
 
-    this->poly_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
-        "/road/polynomial", 1, [this](const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
+
+        // std::vector<geometry_msgs::msg::Vector3> left_contour;
+        // std::vector<geometry_msgs::msg::Vector3> right_contour;
+
+    this->poly_sub = this->create_subscription<phnx_msgs::msg::Contours>(
+        "/road/polynomial", 1, [this](const phnx_msgs::msg::Contours::SharedPtr msg) {
             this->polynomial_cb(msg, this->rgb_model);
         });  ///  TODO fix paras
 
@@ -42,12 +46,8 @@ void polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg, image_geomet
         return;
 
     } else {
-        std::vector<float> coeff{};
-        int no_coeff = msg->data.size();
-
-        for (int i = 0; i < no_coeff; i++) {
-            coeff.push_back(msg->data[i]);
-        }
+        std::vector<geometry_msgs::msg::Vector3> left = msg->left_contour;
+        std::vector<geometry_msgs::msg::Vector3> right = msg->right_contour;
 
         std::string p = std::to_string(camera_rgb.cx());
         RCLCPP_INFO(this->get_logger(), p.c_str());
@@ -56,7 +56,7 @@ void polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg, image_geomet
         //std::string frame_id = "notemptystring";
         // TODO camera frame_id is wrong
         auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
-        std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(coeff, camera_rgb, frame_id);
+        std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(left, right, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
 
         if (path_optional.has_value()) {

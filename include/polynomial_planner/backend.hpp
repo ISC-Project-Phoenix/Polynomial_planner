@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
-#include <polynomial_planner/polyfit.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <string_view>
 #include <vector>
@@ -44,10 +43,12 @@ public:
 
 namespace backend {
 
+// std::vector<double> FitPolynomial(const std::vector<double>& x, const std::vector<double>& y, int degree);
+
 std::vector<cv::Point2d> getLeftContour(std::vector<float> message);
 
 std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
                                                 image_geometry::PinholeCameraModel rgb_info_sub);
-std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& leftPoly,
+std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& left_contours, std::vector<float>& right_contours,
                                                image_geometry::PinholeCameraModel rgb_info_sub, std::string_view frame);
 }  // namespace backend
