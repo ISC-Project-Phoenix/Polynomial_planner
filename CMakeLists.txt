@@ -84,9 +84,9 @@ if (BUILD_TESTING)
             tests/unit.cpp
             # Remember to add node source files
 
-            src/PolynomialPlannerAi.cpp 
-            src/PolynomialPlannerAi_node.cpp
-            src/backend.cpp
+            #src/PolynomialPlannerAi.cpp 
+            #src/PolynomialPlannerAi_node.cpp
+            #src/backend.cpp
     )
     ament_target_dependencies(${PROJECT_NAME}-test ${dependencies})
     target_include_directories(${PROJECT_NAME}-test PUBLIC
