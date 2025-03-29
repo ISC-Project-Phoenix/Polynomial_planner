@@ -22,9 +22,8 @@ PolynomialPlanner::PolynomialPlanner(const rclcpp::NodeOptions& options) : Node(
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
 
-
-        // std::vector<geometry_msgs::msg::Vector3> left_contour;
-        // std::vector<geometry_msgs::msg::Vector3> right_contour;
+    // std::vector<geometry_msgs::msg::Vector3> left_contour;
+    // std::vector<geometry_msgs::msg::Vector3> right_contour;
 
     this->poly_sub = this->create_subscription<phnx_msgs::msg::Contours>(
         "/road/polynomial", 1, [this](const phnx_msgs::msg::Contours::SharedPtr msg) {

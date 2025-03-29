@@ -1,4 +1,5 @@
 #include "polynomial_planner/PolynomialPlannerAi_node.hpp"
+
 #include "polynomial_planner/backend.hpp"
 
 // Required for doTransform
@@ -23,9 +24,8 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
 
-
-        // std::vector<geometry_msgs::msg::Vector3> left_contour;
-        // std::vector<geometry_msgs::msg::Vector3> right_contour;
+    // std::vector<geometry_msgs::msg::Vector3> left_contour;
+    // std::vector<geometry_msgs::msg::Vector3> right_contour;
 
     this->poly_sub = this->create_subscription<phnx_msgs::msg::Contours>(
         "/road/polynomial", 1, [this](phnx_msgs::msg::Contours::SharedPtr msg) {
@@ -40,7 +40,8 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
     this->tf2_listener = std::make_unique<tf2_ros::TransformListener>(*this->tf2_buffer);
 }
 
-void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb) {
+void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
+                                        image_geometry::PinholeCameraModel camera_rgb) {
     // fix msg->empty
     if (false) {
         RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
@@ -68,7 +69,8 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
         //std::string frame_id = "notemptystring";
         // TODO camera frame_id is wrong
         auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
-        std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(cv_points_left, cv_points_right, camera_rgb, frame_id);
+        std::optional<nav_msgs::msg::Path> path_optional =
+            backend::create_path(cv_points_left, cv_points_right, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
 
         if (path_optional.has_value()) {
@@ -82,7 +84,8 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
     }
 }
 
-void PolynomialPlannerAi::polynomial_pb(phnx_msgs::msg::Contours::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb) {
+void PolynomialPlannerAi::polynomial_pb(phnx_msgs::msg::Contours::SharedPtr msg,
+                                        image_geometry::PinholeCameraModel camera_rgb) {
     /*
     // fix msg->empty
     if (false) {

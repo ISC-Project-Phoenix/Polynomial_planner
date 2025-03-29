@@ -6,6 +6,7 @@
 
 #include "image_geometry/pinhole_camera_model.h"
 #include "nav_msgs/msg/path.hpp"
+#include "phnx_msgs/msg/contours.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
@@ -13,7 +14,6 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
-#include "phnx_msgs/msg/contours.hpp"
 
 class PolynomialPlannerAi : public rclcpp::Node {
 private:
@@ -41,5 +41,4 @@ public:
     void evaluate_polynomial(phnx_msgs::msg::Contours::SharedPtr msg, const std::vector<float>& x_values);
 
     void polynomial_pb(phnx_msgs::msg::Contours::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb);
-    
 };

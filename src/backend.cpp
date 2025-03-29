@@ -1,14 +1,14 @@
 #include "polynomial_planner/backend.hpp"
 
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Vector3.h>
+
 #include <algorithm>
 #include <polynomial_planner/polyfit.hpp>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
-
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Vector3.h>
-#include <tf2/LinearMath/Matrix3x3.h>
 
 std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>& left_contours,
                                                         std::vector<cv::Point2d>& right_contours,
@@ -39,17 +39,15 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     std::vector<cv::Point2d> left_contours_ground;
     std::vector<cv::Point2d> right_contours_ground;
 
-    if ( left_contours.empty() ) {
-
+    if (left_contours.empty()) {
     }
-    if ( right_contours.empty() ){
-
+    if (right_contours.empty()) {
     }
 
     // Loop through each point and convert to ground position
     if (is_left_valid) {
-                    // convert element to ground and push back to ground array
-                    left_contours_ground = cameraPixelToGroundPos(left_contours, rgb_info_sub);
+        // convert element to ground and push back to ground array
+        left_contours_ground = cameraPixelToGroundPos(left_contours, rgb_info_sub);
         for (const auto& element : left_contours_ground) {
             if (element.y < min_left) min_left = element.y;
             if (element.y > max_left) max_left = element.y;
@@ -58,8 +56,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     }
     // Loop through each point and convert to ground position
     if (is_right_valid) {
-            // convert element to ground and push back to ground array
-            right_contours_ground = cameraPixelToGroundPos(right_contours, rgb_info_sub);
+        // convert element to ground and push back to ground array
+        right_contours_ground = cameraPixelToGroundPos(right_contours, rgb_info_sub);
         for (const auto& element : right_contours_ground) {
             if (element.y < min_right) min_right = element.y;
             if (element.y > max_right) max_right = element.y;
@@ -90,12 +88,12 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                 // set dy to 1
                 float l = std::sqrt(dx * dx + dy * dy);
                 // find the magnitude
-                dx = dx / l;                     // normalize
-                dy = dy / l;                     // normalize
-                float p_x = x;                   // define x
-                float P_y = leftPoly.poly(p_x);  // define y
-                float camX = (p_x + projection * dy);     // project x
-                float camY = (P_y - projection * dx);     // project y
+                dx = dx / l;                           // normalize
+                dy = dy / l;                           // normalize
+                float p_x = x;                         // define x
+                float P_y = leftPoly.poly(p_x);        // define y
+                float camX = (p_x + projection * dy);  // project x
+                float camY = (P_y - projection * dx);  // project y
                 // TODO refractor with Camera Space pixels
                 // OR do check if distance is greater than 8ish meters
                 if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
