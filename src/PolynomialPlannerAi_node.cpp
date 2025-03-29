@@ -50,6 +50,17 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
         std::vector<geometry_msgs::msg::Vector3> left = msg->left_contour;
         std::vector<geometry_msgs::msg::Vector3> right = msg->right_contour;
 
+        std::vector<cv::Point2d> cv_points_left;
+        std::vector<cv::Point2d> cv_points_right;
+
+        for (const auto& vec : left) {
+            cv_points_left.emplace_back(vec.x, vec.y);  // Efficient in-place construction
+        }
+
+        for (const auto& vec : left) {
+            cv_points_right.emplace_back(vec.x, vec.y);  // Efficient in-place construction
+        }
+
         std::string p = std::to_string(camera_rgb.cx());
         RCLCPP_INFO(this->get_logger(), p.c_str());
 
@@ -57,7 +68,7 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
         //std::string frame_id = "notemptystring";
         // TODO camera frame_id is wrong
         auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
-        std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(left, right, camera_rgb, frame_id);
+        std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(cv_points_left, cv_points_right, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
 
         if (path_optional.has_value()) {
@@ -72,6 +83,7 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
 }
 
 void PolynomialPlannerAi::polynomial_pb(phnx_msgs::msg::Contours::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb) {
+    /*
     // fix msg->empty
     if (false) {
         RCLCPP_WARN(this->get_logger(), "Received empty polynomial (non-AI)");
@@ -118,4 +130,5 @@ void PolynomialPlannerAi::polynomial_pb(phnx_msgs::msg::Contours::SharedPtr msg,
         }
         return;
     }
+        */
 }

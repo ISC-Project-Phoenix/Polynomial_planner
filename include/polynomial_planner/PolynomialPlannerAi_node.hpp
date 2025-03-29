@@ -39,4 +39,7 @@ public:
     /// 'PolynomialPlannerAi::' is unnesscary
     void polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb);
     void evaluate_polynomial(phnx_msgs::msg::Contours::SharedPtr msg, const std::vector<float>& x_values);
+
+    void polynomial_pb(phnx_msgs::msg::Contours::SharedPtr msg, image_geometry::PinholeCameraModel camera_rgb);
+    
 };

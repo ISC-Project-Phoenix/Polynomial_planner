@@ -6,10 +6,14 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
 
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Vector3.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+
 std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>& left_contours,
                                                         std::vector<cv::Point2d>& right_contours,
                                                         image_geometry::PinholeCameraModel rgb_info_sub,
-                                                        std::string_view frame) {
+                                                        std::string_view frame_id) {
     // take in coutours
     // take in Polynomial
     // ros polynoial take in code...
@@ -22,8 +26,6 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     // std::string_view is a string lol
     std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
 
-    std::vector<float>& left_contours_ground;
-
     int width = rgb_info_sub.fullResolution().width;
     int height = rgb_info_sub.fullResolution().height;
     float max_left = 0;
@@ -34,35 +36,33 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     bool is_left_valid = true;
     Polynomial rightPoly;
     Polynomial leftPoly;
-    std::vector<cv::Point2d>& left_contours_ground;
-    std::vector<cv::Point2d>& right_contours_ground;
+    std::vector<cv::Point2d> left_contours_ground;
+    std::vector<cv::Point2d> right_contours_ground;
 
-    if (is_left_valid) {
+    if ( left_contours.empty() ) {
 
     }
-    if (is_right_valid) {
+    if ( right_contours.empty() ){
 
     }
 
     // Loop through each point and convert to ground position
     if (is_left_valid) {
-        for (const auto& element : left_contours) {
-             // convert element to ground and push back to ground array
-            cv::Point2d temp = cameraPixelToGroundPos(element, rgb_info_sub);
-            if (temp.y < min_left) min_left = temp.y;
-            if (temp.y > max_left) max_left = temp.y;
-            left_contours_ground.push_back(temp);
+                    // convert element to ground and push back to ground array
+                    left_contours_ground = cameraPixelToGroundPos(left_contours, rgb_info_sub);
+        for (const auto& element : left_contours_ground) {
+            if (element.y < min_left) min_left = element.y;
+            if (element.y > max_left) max_left = element.y;
         }
         // run regression on ground contours
     }
     // Loop through each point and convert to ground position
     if (is_right_valid) {
-        for (const auto& element : right_contours) {
             // convert element to ground and push back to ground array
-            cv::Point2d temp = cameraPixelToGroundPos(element, rgb_info_sub);
-            if (temp.y < min_right) min_right = temp.y;
-            if (temp.y > max_right) max_right = temp.y;
-            right_contours_ground.push_back(temp);
+            right_contours_ground = cameraPixelToGroundPos(right_contours, rgb_info_sub);
+        for (const auto& element : right_contours_ground) {
+            if (element.y < min_right) min_right = element.y;
+            if (element.y > max_right) max_right = element.y;
         }
         // run regression on ground contours
     }
@@ -76,14 +76,14 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
     float dist = 0;  // the value between the last published point and the current point
     for (int x = start; x > max; x -= interval) {
-        dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
+        dist += sqrt(interval * interval + pow(leftPoly.poly(x) - leftPoly.poly(x + interval), 2));
 
         if (dist > threshold) {
             // TODO figure out how to null value
             if (is_left_valid) {
                 // do left poly math;
                 // <y, -x>
-                float dx = leftPoly->polyDirvative(x);
+                float dx = leftPoly.polyDirvative(x);
                 // calulate dx were dy is 1
                 // becuase I dont want to use a wrapper class
                 float dy = 1;
@@ -93,7 +93,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                 dx = dx / l;                     // normalize
                 dy = dy / l;                     // normalize
                 float p_x = x;                   // define x
-                float P_y = leftPoly->poly(p_x);  // define y
+                float P_y = leftPoly.poly(p_x);  // define y
                 float camX = (p_x + projection * dy);     // project x
                 float camY = (P_y - projection * dx);     // project y
                 // TODO refractor with Camera Space pixels
@@ -108,7 +108,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         }
     }
     for (int x = start; x > max; x -= interval) {
-        dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
+        dist += sqrt(interval * interval + pow(leftPoly.poly(x) - leftPoly.poly(x + interval), 2));
 
         if (dist > threshold) {
             // TODO figure out how to null value
@@ -159,11 +159,11 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         //  }
         // converting <x,y> to message type in ROS
         std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
-                       [&frame](const cv::Point2d& point) {
+                       [&frame_id](const cv::Point2d& point) {
                            geometry_msgs::msg::PoseStamped pose{};
                            // frame = "redto0 isn't sure if we use this";
                            // redto0 is SURE that we use this update and fix ASAP
-                           pose.header.frame_id = frame;  // literally is "notaemptystring"
+                           pose.header.frame_id = frame_id;  // literally is "notaemptystring"
                            pose.pose.position.x = point.x;
                            pose.pose.position.y = point.y;
                            // pose.pose.position.z = point.z;

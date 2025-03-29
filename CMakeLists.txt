@@ -24,7 +24,11 @@ find_package(phnx_msgs REQUIRED)
 
 
 # Node 2
-add_executable(polynomial_planner_ai src/PolynomialPlannerAi.cpp src/PolynomialPlannerAi_node.cpp)
+add_executable(polynomial_planner_ai 
+        src/PolynomialPlannerAi.cpp 
+        src/PolynomialPlannerAi_node.cpp
+        src/backend.cpp
+)
 target_include_directories(polynomial_planner_ai PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
@@ -80,7 +84,9 @@ if (BUILD_TESTING)
             tests/unit.cpp
             # Remember to add node source files
 
+            src/PolynomialPlannerAi.cpp 
             src/PolynomialPlannerAi_node.cpp
+            src/backend.cpp
     )
     ament_target_dependencies(${PROJECT_NAME}-test ${dependencies})
     target_include_directories(${PROJECT_NAME}-test PUBLIC
