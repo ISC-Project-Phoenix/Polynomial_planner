@@ -28,7 +28,7 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
     // std::vector<geometry_msgs::msg::Vector3> right_contour;
 
     this->poly_sub = this->create_subscription<phnx_msgs::msg::Contours>(
-        "/road/polynomial", 1, [this](phnx_msgs::msg::Contours::SharedPtr msg) {
+        "/road/Contours", 1, [this](phnx_msgs::msg::Contours::SharedPtr msg) {
             this->polynomial_cb(msg, this->rgb_model);
         });  ///  TODO fix paras
 

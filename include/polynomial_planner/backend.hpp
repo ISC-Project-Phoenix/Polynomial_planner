@@ -12,16 +12,16 @@
 class Polynomial {
 public:
     // TODO what does std::pmr::vec mean compared to std::vec ???
-    Polynomial(std::vector<float>& vect) { this->vect = vect; }
+    Polynomial(const std::vector<double>& vect) { this->vect = vect; }
     Polynomial() = default;
     // store the vector
 private:
-    std::vector<float> vect;
+    std::vector<double> vect;
 
 public:
     // returns the y value at a given X.
-    float poly(float x) {
-        float result = 0;
+    double poly(double x) {
+        double result = 0;
         for (int i = 0; i < vect.size(); i++) {
             int power = vect.size() - i - 1;
             // TODO this pow function might be wrong
@@ -30,8 +30,8 @@ public:
         }
         return result;
     }
-    float polyDirvative(float x) {
-        float result = 0;
+    double polyDirvative(double x) {
+        double result = 0;
         for (int i = 0; i < vect.size() - 1; i++) {
             int power = vect.size() - i - 2;
             // todo finish?
@@ -45,7 +45,7 @@ namespace backend {
 
 // std::vector<double> FitPolynomial(const std::vector<double>& x, const std::vector<double>& y, int degree);
 
-std::vector<cv::Point2d> getLeftContour(std::vector<float> message);
+std::vector<cv::Point2d> getLeftContour(std::vector<double> message);
 
 std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
                                                 image_geometry::PinholeCameraModel rgb_info_sub);

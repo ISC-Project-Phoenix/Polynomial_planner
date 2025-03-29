@@ -14,7 +14,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                                                         std::vector<cv::Point2d>& right_contours,
                                                         image_geometry::PinholeCameraModel rgb_info_sub,
                                                         std::string_view frame_id) {
-    // take in coutours
+    // take in contours
     // take in Polynomial
     // ros polynoial take in code...
     // transfer to Polynomial class;
@@ -24,55 +24,71 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     // polyfit::FitPolynomial();
 
     // std::string_view is a string lol
-    std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
+    std::vector<cv::Point2d> ground_path;  // this is the vector of path plannign points
 
-    int width = rgb_info_sub.fullResolution().width;
-    int height = rgb_info_sub.fullResolution().height;
-    float max_left = 0;
-    float max_right = 0;
-    float min_left = height;
-    float min_right = height;
-    bool is_right_valid = true;
-    bool is_left_valid = true;
-    Polynomial rightPoly;
+    int width = rgb_info_sub.fullResolution().width;    // camera space sizes!
+    int height = rgb_info_sub.fullResolution().height;  // Camera space sizes!
+
+    int global_degree   = 2;        // the global degree for all polynomial regession
+    double max_left      = 0;
+    double max_right     = 0;
+    double min_left      = height;
+    double min_right     = height;
+    bool is_right_valid = true;     // stores if Polynomial was intizatized!
+    bool is_left_valid  = true;     // left and right respectively
+    Polynomial rightPoly;           // sets the scope to global for the function
     Polynomial leftPoly;
-    std::vector<cv::Point2d> left_contours_ground;
-    std::vector<cv::Point2d> right_contours_ground;
+    std::vector<cv::Point2d> left_contours_ground;      // stores the translated points from
+    std::vector<cv::Point2d> right_contours_ground;     // camera space to ground space
 
     if (left_contours.empty()) {
+        // for any and all checks regarding data cleaning!
+        is_left_valid = false;
     }
     if (right_contours.empty()) {
+        is_right_valid = false;
     }
 
     // Loop through each point and convert to ground position
     if (is_left_valid) {
         // convert element to ground and push back to ground array
         left_contours_ground = cameraPixelToGroundPos(left_contours, rgb_info_sub);
+        std::vector<double> x;  // array for holding x 
+        std::vector<double> y;  //        and y values
         for (const auto& element : left_contours_ground) {
             if (element.y < min_left) min_left = element.y;
             if (element.y > max_left) max_left = element.y;
+            x.push_back(element.x);
+            y.push_back(element.y);
         }
         // run regression on ground contours
+        leftPoly = Polynomial{ polyfit::FitPolynomial(x, y, global_degree) };
     }
     // Loop through each point and convert to ground position
     if (is_right_valid) {
         // convert element to ground and push back to ground array
         right_contours_ground = cameraPixelToGroundPos(right_contours, rgb_info_sub);
+        std::vector<double> x;  // array for holding x 
+        std::vector<double> y;  //        and y values
         for (const auto& element : right_contours_ground) {
             if (element.y < min_right) min_right = element.y;
             if (element.y > max_right) max_right = element.y;
+            x.push_back(element.x);
+            y.push_back(element.y);
         }
         // run regression on ground contours
+        rightPoly = Polynomial{ polyfit::FitPolynomial(x, y, global_degree) };
     }
     // interval for polynomial
-    float max = 480 - 480 * 0.40;    // artificial event horizon, 45
+    // TODO REPLACE ALL CASES OF 480 and 640 with there respective camera spcae coordinates
+    double max = 480 - 480 * 0.40;    // artificial event horizon, 45
                                      // the x value in which path points are no longer allowed to cross.
-    float interval = 3;              // stepping x value up by 3camera px on each iteration
-    float start = 480 - 480 * 0.10;  // bottom of frame
-    float threshold = 10.0;          // min dist between points (in pixels)
-    float projection = 2.3;          // projection distance in kartspace
+    double interval = 3;              // stepping x value up by 3camera px on each iteration
+    double start = 480 - 480 * 0.10;  // bottom of frame
+    double threshold = 10.0;          // min dist between points (in pixels)
+    double projection = 2.3;          // projection distance in kartspace
 
-    float dist = 0;  // the value between the last published point and the current point
+    double dist = 0;  // the value between the last published point and the current point
     for (int x = start; x > max; x -= interval) {
         dist += sqrt(interval * interval + pow(leftPoly.poly(x) - leftPoly.poly(x + interval), 2));
 
@@ -81,23 +97,23 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
             if (is_left_valid) {
                 // do left poly math;
                 // <y, -x>
-                float dx = leftPoly.polyDirvative(x);
+                double dx = leftPoly.polyDirvative(x);
                 // calulate dx were dy is 1
                 // becuase I dont want to use a wrapper class
-                float dy = 1;
+                double dy = 1;
                 // set dy to 1
-                float l = std::sqrt(dx * dx + dy * dy);
+                double l = std::sqrt(dx * dx + dy * dy);
                 // find the magnitude
                 dx = dx / l;                           // normalize
                 dy = dy / l;                           // normalize
-                float p_x = x;                         // define x
-                float P_y = leftPoly.poly(p_x);        // define y
-                float camX = (p_x + projection * dy);  // project x
-                float camY = (P_y - projection * dx);  // project y
+                double p_x = x;                         // define x
+                double P_y = leftPoly.poly(p_x);        // define y
+                double camX = (p_x + projection * dy);  // project x
+                double camY = (P_y - projection * dx);  // project y
                 // TODO refractor with Camera Space pixels
                 // OR do check if distance is greater than 8ish meters
                 if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-                    cam_path.push_back(cv::Point2d(camX, camY));
+                    ground_path.push_back(cv::Point2d(camX, camY));
                 }
                 // return vector as < y, -x >
             }
@@ -114,20 +130,20 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                 // do right poly math
                 // <-y, x>
                 // same steps different numbers
-                float dx = rightPoly.polyDirvative(x);
-                float dy = 1;
-                float l = std::sqrt(dx * dx + dy * dy);
+                double dx = rightPoly.polyDirvative(x);
+                double dy = 1;
+                double l = std::sqrt(dx * dx + dy * dy);
                 l = std::hypot(dx, dy);
                 dx = dx / l;
                 dy = dy / l;
-                float p_x = x;
-                float p_y = leftPoly.poly(x);
-                float camX = (p_x - 7 * dy);
-                float camY = (p_y + 7 * dx);
+                double p_x = x;
+                double p_y = leftPoly.poly(x);
+                double camX = (p_x - 7 * dy);
+                double camY = (p_y + 7 * dx);
                 // TODO refractor with Camera Space pixels
                 // OR do check if distance is greater than 8ish meters
                 if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-                    cam_path.push_back(cv::Point2d(camX, camY));
+                    ground_path.push_back(cv::Point2d(camX, camY));
                 }
                 // return vector as < -y , x >
             }
@@ -137,18 +153,20 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     }
     // Debug looper
     for (int i = 55; i < 200; i++) {
-        float camX = 640;
-        float camY = (i) + 240;
+        double camX = 640;
+        double camY = (i) + 240;
         if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-            // cam_path.push_back(cv::Point2d(camX, camY));
+            // ground_path.push_back(cv::Point2d(camX, camY));
         }
     }
-    if (cam_path.empty()) {
+    if (ground_path.empty()) {
         return std::nullopt;
     } else {
         // Convert from cv types to nav::msg
-        // too few args
-        std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
+
+        // convert from camera to ground
+        // done further ahead already
+        // std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
 
         nav_msgs::msg::Path msg{};
         // msg.header.frame_id = frame;
@@ -201,7 +219,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         //      hopefully
 
         // ask zach for the trig, extend ray to the floor.
-        float divisor = ray.y / 0.6;
+        double divisor = ray.y / 0.6;    // divide by how high off the ground the camera is!
         ray.x = ray.x / divisor;
         ray.y = ray.y / divisor;
         ray.z = ray.z / divisor;
