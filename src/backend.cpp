@@ -9,6 +9,7 @@
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
+#include <cmath>
 
 std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>& left_contours,
                                                         std::vector<cv::Point2d>& right_contours,
@@ -89,11 +90,10 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     double projection = 2.1336;          // projection distance in kartspace
 
     double dist = 0;  // the value between the last published point and the current point
-    for (int x = start; x > max; x -= interval) {
-        dist += sqrt(interval * interval + pow(leftPoly.poly(x) - leftPoly.poly(x + interval), 2));
-
-        if (dist > threshold) {
+    // while ( 8 <  std::sqrt( pow(left_contours_ground[i].x, 2) + pow(left_contours_ground[i].y, 2) )
+    for (int i = 0; i < left_contours_ground.size(); i += 5 ) {
             // TODO figure out how to null value
+            float x = left_contours_ground[i].y;
             if (is_left_valid) {
                 // do left poly math;
                 // <y, -x>
@@ -118,13 +118,11 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                 // return vector as < y, -x >
             }
             // reset the distance counter
-            dist = 0;
         }
-    }
-    for (int x = start; x > max; x -= interval) {
-        dist += sqrt(interval * interval + pow(leftPoly.poly(x) - leftPoly.poly(x + interval), 2));
-
-        if (dist > threshold) {
+    
+    for (int i = 0; i < right_contours_ground.size(); i += 5 ) {
+        // TODO figure out how to null value
+        float x = right_contours_ground[i].y;
             // TODO figure out how to null value
             if (is_right_valid) {
                 // do right poly math
@@ -150,9 +148,9 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
             // reset the distance counter
             dist = 0;
         }
-    }
+    
     // Debug looper
-    for (int i = 55; i < 200; i++) {
+    for (int i = 0; i < left_contours_ground.size(); i += 5 ) {
         double camX = 640;
         double camY = (i) + 240;
         if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
