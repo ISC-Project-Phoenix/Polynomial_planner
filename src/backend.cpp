@@ -43,10 +43,10 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
     if (left_contours.empty()) {
         // for any and all checks regarding data cleaning!
-        is_left_valid = false;
+        // is_left_valid = false;
     }
     if (right_contours.empty()) {
-        is_right_valid = false;
+        // is_right_valid = false;
     }
 
     // Loop through each point and convert to ground position
@@ -62,7 +62,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
             y.push_back(element.y);
         }
         // run regression on ground contours
-        leftPoly = Polynomial{ polyfit::FitPolynomial(x, y, global_degree) };
+        leftPoly = Polynomial{ polyfit::FitPolynomial(y, x, global_degree) };
     }
     // Loop through each point and convert to ground position
     if (is_right_valid) {
@@ -77,16 +77,16 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
             y.push_back(element.y);
         }
         // run regression on ground contours
-        rightPoly = Polynomial{ polyfit::FitPolynomial(x, y, global_degree) };
+        rightPoly = Polynomial{ polyfit::FitPolynomial(y, x, global_degree) };
     }
     // interval for polynomial
     // TODO REPLACE ALL CASES OF 480 and 640 with there respective camera spcae coordinates
     double max = 480 - 480 * 0.40;    // artificial event horizon, 45
                                      // the x value in which path points are no longer allowed to cross.
-    double interval = 3;              // stepping x value up by 3camera px on each iteration
+    double interval = 0.3;              // stepping x value up by 3camera px on each iteration
     double start = 480 - 480 * 0.10;  // bottom of frame
-    double threshold = 10.0;          // min dist between points (in pixels)
-    double projection = 2.3;          // projection distance in kartspace
+    double threshold = 0.50;          // min dist between points (in pixels)
+    double projection = 2.1336;          // projection distance in kartspace
 
     double dist = 0;  // the value between the last published point and the current point
     for (int x = start; x > max; x -= interval) {
@@ -112,9 +112,9 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                 double camY = (P_y - projection * dx);  // project y
                 // TODO refractor with Camera Space pixels
                 // OR do check if distance is greater than 8ish meters
-                if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
+                // if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
                     ground_path.push_back(cv::Point2d(camX, camY));
-                }
+                // }
                 // return vector as < y, -x >
             }
             // reset the distance counter
@@ -138,13 +138,13 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                 dy = dy / l;
                 double p_x = x;
                 double p_y = leftPoly.poly(x);
-                double camX = (p_x - 7 * dy);
-                double camY = (p_y + 7 * dx);
+                double camX = (p_x - projection * dy);
+                double camY = (p_y + projection * dx);
                 // TODO refractor with Camera Space pixels
                 // OR do check if distance is greater than 8ish meters
-                if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
+                // if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
                     ground_path.push_back(cv::Point2d(camX, camY));
-                }
+                // }
                 // return vector as < -y , x >
             }
             // reset the distance counter
@@ -207,8 +207,8 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
 
     for (cv::Point2d& pixel : pixels) {
         // gotta rectify the pixel before we raycast
-        pixel.y += 120;
-        pixel.x += 320;
+        // pixel.y += 120;
+        // pixel.x += 320;
         // cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
         cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(pixel);
 
