@@ -64,6 +64,9 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
         }
 
         std::string p = "left contour size " + std::to_string(left.size());
+        
+
+        std::string p = std::to_string(camera_rgb.cx());
         RCLCPP_INFO(this->get_logger(), p.c_str());
 
         //std::string frame_id = this->get_parameter("camera_frame").as_string();
@@ -112,25 +115,6 @@ void PolynomialPlannerAi::polynomial_pb(phnx_msgs::msg::Contours::SharedPtr msg,
         nav_msgs::msg::Path path;
 
         if (ground_path.has_value()) {
-            // Convert from cv types to nav::msg
-            nav_msgs::msg::Path msg{};
-            // msg.header.frame_id = frame;
-            // for (cv::Point2d ground_points : ground_path) {
-            // std::
-            //  }
-            // converting <x,y> to message type in ROS
-            std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
-                           [&frame](const cv::Point2d& point) {
-                               geometry_msgs::msg::PoseStamped pose{};
-                               // frame = "redto0 isn't sure if we use this";
-                               // redto0 is SURE that we use this update and fix ASAP
-                               pose.header.frame_id = frame;  // literally is "notaemptystring"
-                               pose.pose.position.x = point.x;
-                               pose.pose.position.y = point.y;
-                               // pose.pose.position.z = point.z;
-
-                               return pose;
-                           });
             path.header.frame_id = this->get_parameter(std::string("camera_frame")).as_string();
             this->path_pub->publish(*msg);  // error invalid operator *path
                                             // Extract and print coefficients
