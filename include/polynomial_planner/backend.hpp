@@ -30,7 +30,7 @@ public:
         }
         return result;
     }
-    double polyDirvative(double x) {
+    double polyDerivative(double x) {
         double result = 0;
         for (int i = 0; i < vect.size() - 1; i++) {
             int power = vect.size() - i - 2;

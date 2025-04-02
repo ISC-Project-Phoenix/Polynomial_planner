@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -62,7 +63,7 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
             cv_points_right.emplace_back(vec.x, vec.y);  // Efficient in-place construction
         }
 
-        std::string p = std::to_string(camera_rgb.cx());
+        std::string p = "left contour size " + std::to_string(left.size());
         RCLCPP_INFO(this->get_logger(), p.c_str());
 
         //std::string frame_id = this->get_parameter("camera_frame").as_string();
@@ -79,6 +80,10 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
             this->path_pub->publish(path);  // error invalid operator *path
                                             // Extract and print coefficients
             // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
+            std::string path_string = "PATH size: " + std::to_string(path.poses.size());
+            RCLCPP_INFO(this->get_logger(), path_string.c_str());
+        } else {
+            RCLCPP_INFO(this->get_logger(), "error no path");
         }
         return;
     }
