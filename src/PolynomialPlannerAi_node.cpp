@@ -59,14 +59,13 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
             cv_points_left.emplace_back(vec.x, vec.y);  // Efficient in-place construction
         }
 
-        for (const auto& vec : left) {
+        for (const auto& vec : right) {
             cv_points_right.emplace_back(vec.x, vec.y);  // Efficient in-place construction
         }
 
         std::string p = "left contour size " + std::to_string(left.size());
-        
 
-        std::string p = std::to_string(camera_rgb.cx());
+        // std::string p = std::to_string(camera_rgb.cx());
         RCLCPP_INFO(this->get_logger(), p.c_str());
 
         //std::string frame_id = this->get_parameter("camera_frame").as_string();

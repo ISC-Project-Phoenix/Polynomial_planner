@@ -88,10 +88,10 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     double start = 480 - 480 * 0.10;  // bottom of frame
     double threshold = 0.50;          // min dist between points (in pixels)
     double projection = 2.1336;       // projection distance in kartspace
-
+    projection = 0;
     double dist = 0;  // the value between the last published point and the current point
-    int i = 0;
-    while (5 > std::sqrt(pow(left_contours_ground[i].x, 2) + pow(left_contours_ground[i].y, 2))) {
+
+    for (int i = 0; i < left_contours_ground.size(); i += 5) {
         // TODO figure out how to null value
         float x = left_contours_ground[i].y;
         if (is_left_valid) {
@@ -113,16 +113,20 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                                                     // TODO refractor with Camera Space pixels
                                                     // OR do check if distance is greater than 8ish meters
                                                     // if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-            ground_path.push_back(cv::Point2d(camX, camY));
+            if (std::isfinite(camX) && std::isfinite(camY) ) {
+                // && camX > 0.0  && camX < 12.0 && camY > -8 && camY < 8) {
+                ground_path.push_back(cv::Point2d(camX, camY));
+            } else {
+                // RCLCPP_WARN(rclcpp::get_logger("backend"), "Invalid path point detected");
+            }
             // }
             // return vector as < y, -x >
         }
         // reset the distance counter
         i += 5;
-        if (i > left_contours_ground.size()) break;
     }
-    i = 0;
-    while (5 > std::sqrt(pow(right_contours_ground[i].x, 2) + pow(right_contours_ground[i].y, 2))) {
+
+    for (int i = 0; i < left_contours_ground.size(); i += 5) {
         // TODO figure out how to null value
         float x = right_contours_ground[i].y;
         // TODO figure out how to null value
@@ -137,19 +141,23 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
             dx = dx / l;
             dy = dy / l;
             double p_x = x;
-            double p_y = leftPoly.poly(x);
+            double p_y = rightPoly.poly(x);
             double camY = (p_x - projection * dy);
             double camX = (p_y + projection * dx);
             // TODO refractor with Camera Space pixels
             // OR do check if distance is greater than 8ish meters
             // if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-            ground_path.push_back(cv::Point2d(camX, camY));
+            if (std::isfinite(camX) && std::isfinite(camY) ) {
+                // && camX > 0.0  && camX < 12.0 && camY > -8 && camY < 8) {
+                ground_path.push_back(cv::Point2d(camX, camY));
+            } else {
+                // RCLCPP_WARN(rclcpp::get_logger("backend"), "Invalid path point detected");
+            }
             // }
             // return vector as < -y , x >
         }
         // reset the distance counter
         i += 5;
-        if (i > right_contours_ground.size()) break;
     }
 
     if (ground_path.empty()) {
@@ -192,7 +200,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};
     // set the Roll Pitch YAW
-    optical_to_ros.setRPY(0.0, 0.0, 0.0);
+    /// optical_to_ros.setRPY(0.0, 0.0, 0.0);
     // optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
     optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
 
@@ -204,6 +212,12 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         // pixel.x += 320;
         // cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
         cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(pixel);
+
+        // safety check
+        if (fabs(ray.y) < 1e-6) {  // Near zero check
+            // RCLCPP_WARN(rclcpp::get_logger("backend"), "Invalid ray projection (y near zero)");
+            continue;  // Skip this point
+        }
 
         // -- CAMERA COORDINATES --
         //      positive x = +X TO CAMERA
