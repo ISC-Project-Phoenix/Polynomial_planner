@@ -50,9 +50,7 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
             coeff.push_back(msg->data[i]);
         }
 
-        std::string p = std::to_string(camera_rgb.cx());
-        RCLCPP_INFO(this->get_logger(), p.c_str());
-
+        
         //std::string frame_id = this->get_parameter("camera_frame").as_string();
         //std::string frame_id = "notemptystring";
         // TODO camera frame_id is wrong
@@ -60,8 +58,11 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
         std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(coeff, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
 
+
         if (path_optional.has_value()) {
             path = path_optional.value();
+            std::string p = std::to_string(path.poses.size());
+            RCLCPP_INFO(this->get_logger(), p.c_str());
             path.header.frame_id = this->get_parameter(std::string("camera_frame")).as_string();
             this->path_pub->publish(path);  // error invalid operator *path
                                             // Extract and print coefficients
@@ -69,6 +70,9 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
             for (size_t i = 0; i < msg->data.size(); i++) {
                 // RCLCPP_INFO(this->get_logger(), "Coefficient[%zu] = %.15e", i, msg->data[i]);
             }
+        } else {
+            std::string p = " error no path ";
+            RCLCPP_INFO(this->get_logger(), p.c_str());
         }
         return;
     }

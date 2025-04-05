@@ -11,6 +11,9 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     // std::string_view is a string lol
     std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
 
+    int width = rgb_info_sub.fullResolution().width;    // camera space sizes!
+    int height = rgb_info_sub.fullResolution().height;  // Camera space sizes!
+
     // take in Polynomial
     // ros polynoial take in code...
     // transfer to Polynomial class;
@@ -20,10 +23,10 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     auto leftPoly = new Polynomial(leftPolyVector);
 
     // interval for polynomial
-    float max = 20;          // artificial event horizon,
+    float max = height - height * .40;          // artificial event horizon,
                              // the x value in which path points are no longer allowed to cross.
     float interval = 3;      // stepping x value up by 3camera px on each iteration
-    float start = 220;       // bottom of frame
+    float start = height - height * 0.30;       // bottom of frame
     float threshold = 10.0;  // min dist between points
 
     float dist = 0;  // the value between the last published point and the current point
@@ -32,15 +35,15 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
 
         if (dist > threshold) {
             int translate = 480 - 224;
-            // translate =0;
+            translate =0;
             float camX = leftPoly->poly(x + translate);
             float camY = x + translate;
-            if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
+            // if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
                 // CV point should be x,y
                 // the poly is P(y)
                 // translate should apply to the Y values?
                 cam_path.push_back(cv::Point2d(camX, camY));
-            }
+            // }
             dist = 0;
         }
     }
@@ -100,8 +103,6 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
 
     for (cv::Point2d& pixel : pixels) {
         // gotta rectify the pixel before we raycast
-        pixel.y += 120;
-        pixel.x += 320;
         // cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
         cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(pixel);
 
