@@ -9,36 +9,17 @@ endif ()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(image_geometry REQUIRED)
 # Messages TODO_EXTRA
-find_package(ackermann_msgs REQUIRED)
+# find_package(ackermann_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-#find_package(std_msgs REQUIRED)
 # OpenCV TODO_EXTRA
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
 
-#for ros listeners
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(rclpy REQUIRED)
-# define the publisher and subscriper nodes with the node names
-add_executable(talker src/publisher_member_function.cpp)
-ament_target_dependencies(talker rclcpp std_msgs)
-install(TARGETS
-  talker
-  DESTINATION lib/${PROJECT_NAME})
-  #define project name
-#end ros listners includes
-
-# Add source for node executable (link non-ros dependencies here)
-add_executable(polynomial_planner src/PolynomialPlanner.cpp src/PolynomialPlanner_node.cpp)
-target_include_directories(polynomial_planner PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>)
-target_compile_features(polynomial_planner PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 # Node 2
 add_executable(polynomial_planner_ai src/PolynomialPlannerAi.cpp src/PolynomialPlannerAi_node.cpp)
@@ -51,7 +32,7 @@ target_compile_features(polynomial_planner_ai PUBLIC c_std_99 cxx_std_17)  # Req
 set(dependencies
         rclcpp
         # Messages TODO_EXTRA
-        ackermann_msgs
+        # ackermann_msgs
         sensor_msgs
         std_msgs
         nav_msgs
@@ -60,13 +41,12 @@ set(dependencies
         # OpenCv TODO_EXTRA
         cv_bridge
         OpenCV
+        # for camera space transformation
+        image_geometry
 )
 
 # Link ros dependencies
-ament_target_dependencies(
-        polynomial_planner
-        ${dependencies}
-)
+
 
 # Link ros dependencies
 ament_target_dependencies(
@@ -74,8 +54,6 @@ ament_target_dependencies(
         ${dependencies}
 )
 
-install(TARGETS polynomial_planner
-        DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS polynomial_planner_ai
         DESTINATION lib/${PROJECT_NAME})
@@ -97,7 +75,7 @@ if (BUILD_TESTING)
     ament_add_gtest(${PROJECT_NAME}-test
             tests/unit.cpp
             # Remember to add node source files
-            src/PolynomialPlanner_node.cpp
+
             src/PolynomialPlannerAi_node.cpp
     )
     ament_target_dependencies(${PROJECT_NAME}-test ${dependencies})

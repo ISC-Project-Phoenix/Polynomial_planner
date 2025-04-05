@@ -2,108 +2,130 @@
 
 #include <algorithm>
 
-#include "geometry_msgs/msgs/PoseStamped.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "image_geometry/pinhole_camera_model.h"
 
-std::optional<nav_msgs::msg::Path> backend::create_path(const std::vector& leftPoly,
-                                                        const std::vector& rightPoly std::string_view frame) {
+std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& leftPolyVector,
+                                                        image_geometry::PinholeCameraModel rgb_info_sub,
+                                                        std::string_view frame) {
     // std::string_view is a string lol
-    std::vector<cv::Point2d> path;  // this is the array for cone points
-                                    // this will make the
-    // Start path from kart
-    path.emplace_back(0, 0);
+    std::vector<cv::Point2d> cam_path;  // this is the vector of path plannign points
+
+    int width = rgb_info_sub.fullResolution().width;    // camera space sizes!
+    int height = rgb_info_sub.fullResolution().height;  // Camera space sizes!
+
     // take in Polynomial
     // ros polynoial take in code...
     // transfer to Polynomial class;
-    float is_right_valid = false;
-    float is_left_valid = false;
+    // float is_right_valid = false;
+    // float is_left_valid = false;
 
-    for (int i = 0; i < /* listenerArry.length*/; i++) {
-        is_left_valid = (leftPoly == NULL) ? is_left_valid : (leftPoly[i] != 0) ? true : is_left_valid;
-
-        is_right_valid = (rightPoly == NULL) ? is_right_valid : (rightPoly[i] != 0) ? true : is_right_valid;
-    }
-    leftPoly = (is_left_valid) ? new Polynomial(/* vector from ros listener */) : null;
-    if (is_left_valid) {
-        Polynomial leftPoly = new Polynomial(/* vector from ros listener */);
-    } else {
-        // TODO this is lazy and bad fix please
-        Polynomial leftPoly = null;
-    }
-    rightPoly = (is_right_valid) ? new Polynomial(/* vector from ros listener */) : null;
-    if (is_right_valid) {
-        Polynomial rightPoly = new Polynomial(/* vector from ros listener */);
-    } else {
-        // TODO this is lazy and bad fix please
-        Polynomial rightPoly = null;
-    }
+    auto leftPoly = new Polynomial(leftPolyVector);
 
     // interval for polynomial
-    float max = 10;
-    float interval = 0.25;
-    float start = 0;
-    std::vector<cv::Point2d> nav_points;
-    for (float i = start; i < max; i += interval) {
-        // generate points
-        nav_points.pushback();
-        if (leftPoly != null) {
-            // do left poly math;
-            // <y, -x>
-            float dx = leftPoly.polyDirvative(x);
-            // calulate dx were dy is 1
-            // becuase I dont want to use a wrapper class
-            float dy = 1;
-            // set dy to 1
-            float l = std::sqrt(dx * dx + dy * dy);
-            // find the magnitude
-            dx = dx / l;  // normalize
-            dy = dy / l;  // normalize
-            cv::Point2d temp;
-            float x = i;                 // define x
-            float y = leftPoly.poly(x);  // define y
-            temp.x = (x + 7 * dy);       // project x
-            temp.y = (y - 7 * dx);       // project y
-            nav_points[i].pushback(temp);
-            // return vector as < y, -x >
+    float max = height - height * .40;          // artificial event horizon,
+                             // the x value in which path points are no longer allowed to cross.
+    float interval = 3;      // stepping x value up by 3camera px on each iteration
+    float start = height - height * 0.30;       // bottom of frame
+    float threshold = 10.0;  // min dist between points
+
+    float dist = 0;  // the value between the last published point and the current point
+    for (int x = start; x > max; x -= interval) {
+        dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
+
+        if (dist > threshold) {
+            int translate = 480 - 224;
+            translate =0;
+            float camX = leftPoly->poly(x + translate);
+            float camY = x + translate;
+
+            cam_path.push_back(cv::Point2d(camX, camY));
+            dist = 0;
         }
-        if (rightPoly != null) {
-            // do right poly math
-            // <-y, x>
-            // same steps different numbers
-            float dx = rightPoly.polyDirvative(x);
-            float dy = 1;
-            float l = std::sqrt(dx * dx + dy * dy);
-            l = std::hypot(dx, dy);
-            dx = dx / l;
-            dy = dy / l;
-            cv::Point2d temp;
-            float x = i;
-            float y = leftPoly.poly(x);
-            temp.x = (x - 7 * dy);
-            temp.y = (y + 7 * dx);
-            nav_points[i].pushback(temp);
-            // return vector as < -y , x >
-        }
-        // rememebr to return
     }
 
-    if (path.empty()) {
+    for (int i = 55; i < 200; i++) {
+        float camX = 320;
+        float camY = (i) + 240;
+        if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
+            // cam_path.push_back(cv::Point2d(camX, camY));
+        }
+    }
+
+    if (cam_path.empty()) {
         return std::nullopt;
     } else {
-        // Convert from cv types to ros
+        // Convert from cv types to nav::msg
+        // too few args
+        std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
+
         nav_msgs::msg::Path msg{};
-        msg.header.frame_id = frame;
-
-        // how do cv types differ from ros types.
+        // msg.header.frame_id = frame;
+        // for (cv::Point2d ground_points : ground_path) {
+        // std::
+        //  }
         // converting <x,y> to message type in ROS
-        std::transform(path.begin(), path.end(), std::back_inserter(msg.poses), [&frame](const cv::Point2d& point) {
-            geometry_msgs::msg::PoseStamped pose{};
-            pose.header.frame_id = frame;
-            pose.pose.position.x = point.x;
-            pose.pose.position.y = point.y;
+        std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
+                       [&frame](const cv::Point2d& point) {
+                           geometry_msgs::msg::PoseStamped pose{};
+                           // frame = "redto0 isn't sure if we use this";
+                           // redto0 is SURE that we use this update and fix ASAP
+                           pose.header.frame_id = frame;  // literally is "notaemptystring"
+                           pose.pose.position.x = point.x;
+                           pose.pose.position.y = point.y;
+                           // pose.pose.position.z = point.z;
 
-            return pose;
-        });
+                           return pose;
+                       });
 
         return msg;
     }
+}
+
+// why are the pointer things the way they are
+// TODO: make it not die when z is too small
+//       or make z not too small
+std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
+                                                         image_geometry::PinholeCameraModel rgb_info_sub) {
+    // Rotation that rotates left 90 and backwards 90.
+    // This converts from camera coordinates in OpenCV to ROS coordinates
+    tf2::Quaternion optical_to_ros{};
+    // set the Roll Pitch YAW
+    optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
+    // optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
+    // optical_to_ros.setRPY(0.0, 0.0, 0.0);
+
+    std::vector<cv::Point2d> rwpoints;
+
+    for (cv::Point2d& pixel : pixels) {
+        // gotta rectify the pixel before we raycast
+        // cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
+        cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(pixel);
+
+        // -- CAMERA COORDINATES --
+        //      positive x = +X TO CAMERA
+        //      positive y = STRAIGHT TO GROUND
+        //      positive z = OUT OF CAMERA
+        //      hopefully
+
+        // ask zach for the trig, extend ray to the floor.
+        float divisor = ray.y / 0.6;
+        ray.x = ray.x / divisor;
+        ray.y = ray.y / divisor;
+        ray.z = ray.z / divisor;
+        // ray /= ray.z / -0.6;
+        // ray.z = (ray.z * -1);  // we don't really care abt z, since it -will- *should* always just be cameraHeight
+        tf2::Vector3 tf_vec{ray.z, -ray.x, -ray.y};
+        //tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
+        //tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
+
+        //return type world_vec, use this is
+
+        cv::Point2d dvector(tf_vec.x(), tf_vec.y());
+
+        // push back vectors
+        rwpoints.push_back(dvector);
+    }
+
+    return rwpoints;
 }
