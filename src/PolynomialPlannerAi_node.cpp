@@ -49,7 +49,6 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
         for (int i = 0; i < no_coeff; i++) {
             coeff.push_back(msg->data[i]);
         }
-        Default
         
         //std::string frame_id = this->get_parameter("camera_frame").as_string();
         //std::string frame_id = "notemptystring";
