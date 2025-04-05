@@ -38,12 +38,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
             translate =0;
             float camX = leftPoly->poly(x + translate);
             float camY = x + translate;
-            // if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-                // CV point should be x,y
-                // the poly is P(y)
-                // translate should apply to the Y values?
-                cam_path.push_back(cv::Point2d(camX, camY));
-            // }
+
+            cam_path.push_back(cv::Point2d(camX, camY));
             dist = 0;
         }
     }
