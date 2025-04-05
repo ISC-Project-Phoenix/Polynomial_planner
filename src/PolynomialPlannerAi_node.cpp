@@ -64,8 +64,9 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
         }
 
         std::string p = "left contour size " + std::to_string(left.size());
+        RCLCPP_INFO(this->get_logger(), p.c_str());
 
-        // std::string p = std::to_string(camera_rgb.cx());
+        p = "right contour size " + std::to_string(right.size());
         RCLCPP_INFO(this->get_logger(), p.c_str());
 
         //std::string frame_id = this->get_parameter("camera_frame").as_string();

@@ -16,150 +16,82 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                                                         image_geometry::PinholeCameraModel rgb_info_sub,
                                                         std::string_view frame_id) {
     // take in contours
-    // take in Polynomial
-    // ros polynoial take in code...
-    // transfer to Polynomial class;
+    // DO NOT THE Polynomials
+    // Match the pointd...
+    // shortest side first larger side second. 
+    // translate to normal space. 
 
     // takes in two arrays of x, y, and degree.pushback();
     // returns coefficients
     // polyfit::FitPolynomial();
 
     // std::string_view is a string lol
-    std::vector<cv::Point2d> ground_path;  // this is the vector of path plannign points
+    std::vector<cv::Point2d> ground_path;   // this is the vector of path plannign points in cart space
+    std::vector<cv::Point2d> cam_path;      // this is the vector of path plannign points in camera space 
+    ground_path.emplace_back(cv::Point2d(0, 0));
 
     int width = rgb_info_sub.fullResolution().width;    // camera space sizes!
     int height = rgb_info_sub.fullResolution().height;  // Camera space sizes!
 
-    int global_degree = 2;  // the global degree for all polynomial regession
-    double max_left = 0;
-    double max_right = 0;
-    double min_left = height;
-    double min_right = height;
     bool is_right_valid = true;  // stores if Polynomial was intizatized!
     bool is_left_valid = true;   // left and right respectively
-    Polynomial rightPoly;        // sets the scope to global for the function
-    Polynomial leftPoly;
-    std::vector<cv::Point2d> left_contours_ground;   // stores the translated points from
-    std::vector<cv::Point2d> right_contours_ground;  // camera space to ground space
+
 
     if (left_contours.empty()) {
         // for any and all checks regarding data cleaning!
         // is_left_valid = false;
+        return std::nullopt;
     }
     if (right_contours.empty()) {
         // is_right_valid = false;
+        return std::nullopt;
+    }
+    std::vector<cv::Point2d> bigger_array;
+    std::vector<cv::Point2d> smaller_array;
+
+    bool is_left_bigger = left_contours.size() > right_contours.size();
+
+    if (is_left_bigger) {
+        bigger_array = left_contours;
+        smaller_array = right_contours;
+    } else {
+        smaller_array = left_contours;
+        bigger_array = right_contours;
     }
 
-    // Loop through each point and convert to ground position
-    if (is_left_valid) {
-        // convert element to ground and push back to ground array
-        left_contours_ground = cameraPixelToGroundPos(left_contours, rgb_info_sub);
-        std::vector<double> x;  // array for holding x
-        std::vector<double> y;  //        and y values
-        for (const auto& element : left_contours_ground) {
-            if (element.y < min_left) min_left = element.y;
-            if (element.y > max_left) max_left = element.y;
-            x.push_back(element.x);
-            y.push_back(element.y);
-        }
-        // run regression on ground contours
-        leftPoly = Polynomial{polyfit::FitPolynomial(y, x, global_degree)};
+    if (is_left_bigger) {
+        bigger_array = left_contours;
+        smaller_array = right_contours;
+    } else {
+        bigger_array = right_contours;
+        smaller_array = left_contours;
     }
-    // Loop through each point and convert to ground position
-    if (is_right_valid) {
-        // convert element to ground and push back to ground array
-        right_contours_ground = cameraPixelToGroundPos(right_contours, rgb_info_sub);
-        std::vector<double> x;  // array for holding x
-        std::vector<double> y;  //        and y values
-        for (const auto& element : right_contours_ground) {
-            if (element.y < min_right) min_right = element.y;
-            if (element.y > max_right) max_right = element.y;
-            x.push_back(element.x);
-            y.push_back(element.y);
-        }
-        // run regression on ground contours
-        rightPoly = Polynomial{polyfit::FitPolynomial(y, x, global_degree)};
-    }
-    // interval for polynomial
-    // TODO REPLACE ALL CASES OF 480 and 640 with there respective camera spcae coordinates
-    double max = 480 - 480 * 0.40;    // artificial event horizon, 45
-                                      // the x value in which path points are no longer allowed to cross.
-    double interval = 0.3;            // stepping x value up by 3camera px on each iteration
-    double start = 480 - 480 * 0.10;  // bottom of frame
-    double threshold = 0.50;          // min dist between points (in pixels)
-    double projection = 2.1336;       // projection distance in kartspace
-    projection = 0;
-    double dist = 0;  // the value between the last published point and the current point
-
-    for (int i = 0; i < left_contours_ground.size(); i += 5) {
-        // TODO figure out how to null value
-        float x = left_contours_ground[i].y;
-        if (is_left_valid) {
-            // do left poly math;
-            // <y, -x>
-            double dy = leftPoly.polyDerivative(x);
-            // calulate dx were dy is 1
-            // becuase I dont want to use a wrapper class
-            double dx = 1;
-            // set dy to 1
-            double l = std::sqrt(dx * dx + dy * dy);
-            // find the magnitude
-            dx = dx / l;                            // normalize
-            dy = dy / l;                            // normalize
-            double p_x = x;                         // define x
-            double P_y = leftPoly.poly(p_x);        // define y
-            double camY = (p_x + projection * dy);  // project x
-            double camX = (P_y - projection * dx);  // project y
-                                                    // TODO refractor with Camera Space pixels
-                                                    // OR do check if distance is greater than 8ish meters
-                                                    // if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-            if (std::isfinite(camX) && std::isfinite(camY) ) {
-                // && camX > 0.0  && camX < 12.0 && camY > -8 && camY < 8) {
-                ground_path.push_back(cv::Point2d(camX, camY));
-            } else {
-                // RCLCPP_WARN(rclcpp::get_logger("backend"), "Invalid path point detected");
+    
+    for (int i = 0; i < smaller_array.size(); i++) {
+        float old_dist = 1000000;
+        int lucky_index = -1;
+    
+        for (int j = 0; j < bigger_array.size(); j++) {
+            double dx = smaller_array[i].x - bigger_array[j].x;
+            double dy = smaller_array[i].y - bigger_array[j].y;
+            double new_dist = std::sqrt(dx * dx + dy * dy);
+            if (new_dist < old_dist) {
+                old_dist = new_dist;
+                lucky_index = j;
             }
-            // }
-            // return vector as < y, -x >
         }
-        // reset the distance counter
-        i += 5;
-    }
-
-    for (int i = 0; i < left_contours_ground.size(); i += 5) {
-        // TODO figure out how to null value
-        float x = right_contours_ground[i].y;
-        // TODO figure out how to null value
-        if (is_right_valid) {
-            // do right poly math
-            // <-y, x>
-            // same steps different numbers
-            double dy = rightPoly.polyDerivative(x);
-            double dx = 1;
-            double l = std::sqrt(dx * dx + dy * dy);
-            l = std::hypot(dx, dy);
-            dx = dx / l;
-            dy = dy / l;
-            double p_x = x;
-            double p_y = rightPoly.poly(x);
-            double camY = (p_x - projection * dy);
-            double camX = (p_y + projection * dx);
-            // TODO refractor with Camera Space pixels
-            // OR do check if distance is greater than 8ish meters
-            // if (camY >= 240 && camY <= 480 && camX >= 0 && camX <= 640) {
-            if (std::isfinite(camX) && std::isfinite(camY) ) {
-                // && camX > 0.0  && camX < 12.0 && camY > -8 && camY < 8) {
-                ground_path.push_back(cv::Point2d(camX, camY));
-            } else {
-                // RCLCPP_WARN(rclcpp::get_logger("backend"), "Invalid path point detected");
-            }
-            // }
-            // return vector as < -y , x >
+    
+        if (lucky_index >= 0) {
+            double x = (bigger_array[lucky_index].x + smaller_array[i].x) / 2;
+            double y = (bigger_array[lucky_index].y + smaller_array[i].y) / 2;
+    
+            cam_path.push_back(cv::Point2d(x, y));
+    
+            bigger_array.erase(bigger_array.begin() + lucky_index);
         }
-        // reset the distance counter
-        i += 5;
     }
-
+    
+    ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
     if (ground_path.empty()) {
         return std::nullopt;
     } else {
@@ -201,10 +133,10 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
     tf2::Quaternion optical_to_ros{};
     // set the Roll Pitch YAW
     /// optical_to_ros.setRPY(0.0, 0.0, 0.0);
-    // optical_to_ros.setRPY(0.0, 0.0, -M_PI / 2);
     optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
 
     std::vector<cv::Point2d> rwpoints;
+    const double camera_height = 0.6;  // meters
 
     for (cv::Point2d& pixel : pixels) {
         // gotta rectify the pixel before we raycast
@@ -226,7 +158,7 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
         //      hopefully
 
         // ask zach for the trig, extend ray to the floor.
-        double divisor = ray.y / 0.6;  // divide by how high off the ground the camera is!
+        double divisor = ray.y / camera_height;  // divide by how high off the ground the camera is!
         ray.x = ray.x / divisor;
         ray.y = ray.y / divisor;
         ray.z = ray.z / divisor;
