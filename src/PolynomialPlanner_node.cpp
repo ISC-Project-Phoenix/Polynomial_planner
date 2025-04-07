@@ -1,3 +1,4 @@
+
 #include "polynomial_planner/PolynomialPlanner_node.hpp"
 
 // Required for doTransform
@@ -44,7 +45,7 @@ void polynomial_cb(std_msgs::msg::String::SharedPtr) {
             coeff.push_back(msg->data[i]);
         }
         // TODO fix params
-        nav_msgs::msg::Path path = backend::create_path(coeff, frame);
+        nav_msgs::msg::Path path = backend::create_path(coeff, camera_rgb, frame_id);
 
         geometry_msgs::msg::PoseStamped path_poses[] = path.poses;
 
@@ -57,48 +58,3 @@ void polynomial_cb(std_msgs::msg::String::SharedPtr) {
         this->path_pub->publish(*path);
     }
 }
-
-/* not so obvious reference:
-geometry_msgs::msg::PoseArray PolynomialPlanner::project_to_world(const std::vector<cv::Point2d>& object_locations,
-                                                                  const cv::Mat& depth) {
-    geometry_msgs::msg::PoseArray poses{};
-    poses.header.frame_id = this->get_parameter(std::string{"camera_frame"}).as_string();
-
-    // Rotation that rotates left 90 and backwards 90.
-    // This converts from camera coordinates in OpenCV to ROS coordinates
-    tf2::Quaternion optical_to_ros{};
-    optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
-
-    for (const cv::Point2d& center : object_locations) {
-        if (!this->rgb_model.initialized()) {
-            continue;
-        }
-
-        // Project pixel to camera space
-        auto ray = this->rgb_model.projectPixelTo3dRay(center);
-        // The oak-d uses shorts in mm, sim uses f32 in m
-        float dist = depth.type() == 2 ? (float)depth.at<short>(center) / 1000 : depth.at<float>(center);
-
-        // If depth unavailable, then skip
-        if (dist == INFINITY || dist >= 10 || dist <= 0) {
-            continue;
-        }
-
-        // Just resize the ray to be a vector at the distance of the depth pixel. This is in camera space
-        auto point_3d = dist / cv::norm(ray) * ray;
-
-        // Convert from camera space to ros coordinates ("World" but wrt camera mount)
-        tf2::Vector3 tf_vec{point_3d.x, point_3d.y, point_3d.z};
-        auto world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
-
-        geometry_msgs::msg::Pose p{};
-        p.position.x = world_vec.x();
-        p.position.y = world_vec.y();
-        p.position.z = world_vec.z();
-        poses.poses.push_back(p);
-    }
-
-    poses.header.stamp = this->get_clock()->now();
-    return poses;
-}
-    */

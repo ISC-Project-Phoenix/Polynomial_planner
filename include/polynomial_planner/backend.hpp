@@ -42,9 +42,11 @@ public:
 };
 
 namespace backend {
+std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& leftPolyVector,
+                                               const image_geometry::PinholeCameraModel& camera_info,
+                                               const std::string_view& frame);
 
-std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
-                                                image_geometry::PinholeCameraModel rgb_info_sub);
-std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& leftPoly,
-                                               image_geometry::PinholeCameraModel rgb_info_sub, std::string_view frame);
+nav_msgs::msg::Path cameraPixelToGroundPos(std::vector<cv::Point2d>& path_points,
+                                           const image_geometry::PinholeCameraModel& camera_info, float camera_height,
+                                           const std::string_view& frame);
 }  // namespace backend
