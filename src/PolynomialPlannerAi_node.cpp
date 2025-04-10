@@ -12,6 +12,13 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
 
+#include "geometry_msgs/msg/vector3.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/camera_info.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "phnx_msgs/msg/contours.hpp"
+
 using namespace std::placeholders;
 
 PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : Node("polynomial_planner_ai", options) {
@@ -25,8 +32,8 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
 
-    this->poly_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
-        "/road/polynomial", 1, [this](const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
+    this->poly_sub = this->create_subscription<phnx_msgs::msg::Contours>(
+        "/road/Contours", 1, [this](phnx_msgs::msg::Contours::SharedPtr msg) {
             this->polynomial_cb(msg, this->rgb_model);
         });  ///  TODO fix paras
 
@@ -38,7 +45,7 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
     this->tf2_listener = std::make_unique<tf2_ros::TransformListener>(*this->tf2_buffer);
 }
 
-void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::SharedPtr msg,
+void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
                                         image_geometry::PinholeCameraModel camera_rgb) {
     // fix msg->empty
     if (false) {
@@ -46,18 +53,32 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
         return;
 
     } else {
-        std::vector<float> coeff{};
-        int no_coeff = msg->data.size();
+        std::vector<geometry_msgs::msg::Vector3> left = msg->left_contour;
+        std::vector<geometry_msgs::msg::Vector3> right = msg->right_contour;
 
-        for (int i = 0; i < no_coeff; i++) {
-            coeff.push_back(msg->data[i]);
+        std::vector<cv::Point2d> cv_points_left;
+        std::vector<cv::Point2d> cv_points_right;
+
+        for (const auto& vec : left) {
+            cv_points_left.emplace_back(vec.x, vec.y);  // Efficient in-place construction
         }
+
+        for (const auto& vec : right) {
+            cv_points_right.emplace_back(vec.x, vec.y);  // Efficient in-place construction
+        }
+
+        std::string p = "left contour size " + std::to_string(left.size());
+        RCLCPP_INFO(this->get_logger(), p.c_str());
+
+        p = "right contour size " + std::to_string(right.size());
+        RCLCPP_INFO(this->get_logger(), p.c_str());
 
         //std::string frame_id = this->get_parameter("camera_frame").as_string();
         //std::string frame_id = "notemptystring";
         // TODO camera frame_id is wrong
         auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
-        std::optional<nav_msgs::msg::Path> path_optional = backend::create_path(coeff, camera_rgb, frame_id);
+        std::optional<nav_msgs::msg::Path> path_optional =
+            backend::create_path(cv_points_left, cv_points_right, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
 
         if (path_optional.has_value()) {
@@ -86,23 +107,10 @@ void PolynomialPlannerAi::polynomial_cb(std_msgs::msg::Float32MultiArray::Shared
             this->path_pub->publish(path);  // error invalid operator *path
                                             // Extract and print coefficients
             // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
-            for (size_t i = 0; i < msg->data.size(); i++) {
-                // RCLCPP_INFO(this->get_logger(), "Coefficient[%zu] = %.15e", i, msg->data[i]);
-            }
         } else {
             std::string p = " error no path ";
             RCLCPP_INFO(this->get_logger(), p.c_str());
         }
         return;
-    }
-}
-
-void PolynomialPlannerAi::evaluate_polynomial(const std::vector<float>& coeffs, const std::vector<float>& x_values) {
-    for (float x : x_values) {
-        float y = 0.0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
-            y += coeffs[i] * std::pow(x, i);
-        }
-        // RCLCPP_INFO(this->get_logger(), "P(%f) = %f", x, y);
     }
 }
