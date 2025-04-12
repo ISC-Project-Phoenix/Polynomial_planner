@@ -9,15 +9,12 @@
 
 std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>& left_contours,
                                                         std::vector<cv::Point2d>& right_contours,
-                                                        image_geometry::PinholeCameraModel camera_info,
-                                                        std::string_view frame_id) {
+                                                        image_geometry::PinholeCameraModel& camera_info,
+                                                        std::string frame_id) {
     // take in contours
     // DO NOT THE Polynomials
     // Match the pointd...
     // shortest side first larger side second.
-    // translate to normal space.
-
-    // takes in two arrays of x, y, and degree.pushback();
     // returns coefficients
     // polyfit::FitPolynomial();
 
@@ -109,8 +106,7 @@ cv::Vec3f intersectPoint(cv::Vec3f rayVector, cv::Vec3f rayPoint, cv::Vec3f plan
 //       or make z not too small
 nav_msgs::msg::Path backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& path_points,
                                                     const image_geometry::PinholeCameraModel& camera_info,
-                                                    float camera_height, 
-                                                    const std::string_view& frame_id) {
+                                                    float camera_height, std::string frame_id) {
     // Rotation that rotates left 90 and backwards 90.
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};

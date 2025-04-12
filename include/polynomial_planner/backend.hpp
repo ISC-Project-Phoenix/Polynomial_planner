@@ -43,11 +43,9 @@ public:
 
 namespace backend {
 nav_msgs::msg::Path cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
-                                                image_geometry::PinholeCameraModel& rgb_info_sub
-                                                float camera_height,
-                                                std::string_view frame_id);
+                                           const image_geometry::PinholeCameraModel& rgb_info_sub, float camera_height,
+                                           std::string frame_id);
 std::optional<nav_msgs::msg::Path> create_path(std::vector<cv::Point2d>& left_contours,
                                                std::vector<cv::Point2d>& right_contours,
-                                               image_geometry::PinholeCameraModel camera_info,
-                                               std::string_view frame_id);
+                                               image_geometry::PinholeCameraModel& camera_info, std::string frame_id);
 }  // namespace backend
