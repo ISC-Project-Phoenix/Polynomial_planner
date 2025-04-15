@@ -21,6 +21,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
     // std::string_view is a string lol
     nav_msgs::msg::Path ground_points;     // this is the vector of path plannign points in camera space
+    std::vector<cv::Point2d> cam_path;
 
     int width = camera_info.fullResolution().width;    // camera space sizes!
     int height = camera_info.fullResolution().height;  // Camera space sizes!
@@ -41,47 +42,24 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     nav_msgs::msg::Path smaller_array;
 
     bool is_left_bigger = left_contours.size() > right_contours.size();
-
+    Polynomial poly_center = Polynomial(center_poly);
     if (is_left_bigger) {
-        bigger_array = backend::cameraPixelToGroundPos(left_contours, camera_info, 0.6, frame_id);
-        smaller_array = backend::cameraPixelToGroundPos(right_contours, camera_info, 0.6, frame_id);
+        for (int i = 0; i < left_contours.size(); i++){
+            float x = poly_center.poly(left_contours[i].y); 
+            float y = left_contours[i].y;
+            cam_path.push_back(cv::Point2d(x, y));
+        }
     } else {
-        smaller_array = backend::cameraPixelToGroundPos(left_contours, camera_info, 0.6, frame_id);
-        bigger_array = backend::cameraPixelToGroundPos(right_contours, camera_info, 0.6, frame_id);
-    }
-
-    for (int i = 0; i < smaller_array.poses.size(); i++) {
-        float old_dist = 1000000;
-        int lucky_index = -1;
-
-        for (int j = 0; j < bigger_array.poses.size(); j++) {
-            double dx = smaller_array.poses[i].pose.position.x - bigger_array.poses[j].pose.position.x;
-            double dy = smaller_array.poses[i].pose.position.y - bigger_array.poses[j].pose.position.y;
-            double new_dist = std::sqrt(dx * dx + dy * dy);
-            if (new_dist < old_dist) {
-                old_dist = new_dist;
-                lucky_index = j;
-            }
-        }
-
-        if (lucky_index >= 0) {
-            double x = (bigger_array.poses[lucky_index].pose.position.x + smaller_array.poses[i].pose.position.x) / 2;
-            double y = (bigger_array.poses[lucky_index].pose.position.y + smaller_array.poses[i].pose.position.y) / 2;
-
-            geometry_msgs::msg::PoseStamped p{};
-            // TODO solve why -world_vec.x needs to be invereted and let andy know why pls
-            p.pose.position.x = x;
-            p.pose.position.y = y;
-            p.pose.position.z = 0;
-            p.header.frame_id = frame_id;
-    
-            ground_points.poses.push_back(p);
-
-            bigger_array.poses.erase(bigger_array.poses.begin() + lucky_index);
+        for (int i = 0; i < right_contours.size(); i++){
+            float x = poly_center.poly(right_contours[i].y); 
+            float y = right_contours[i].y;
+            cam_path.push_back(cv::Point2d(y, x));
         }
     }
 
-    if (ground_points.poses.empty() && ground_points.poses.size() < 1000) {
+    ground_points = backend::cameraPixelToGroundPos(cam_path, camera_info, 0.527, frame_id);
+
+    if (ground_points.poses.empty()) {
         return std::nullopt;
     } else {
         // Convert from cv types to nav::msg
