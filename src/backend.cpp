@@ -9,6 +9,7 @@
 
 std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>& left_contours,
                                                         std::vector<cv::Point2d>& right_contours,
+                                                        std::vector<float> center_poly,
                                                         image_geometry::PinholeCameraModel& camera_info,
                                                         std::string frame_id) {
     // take in contours
@@ -19,9 +20,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     // polyfit::FitPolynomial();
 
     // std::string_view is a string lol
-    std::vector<cv::Point2d> ground_path;  // this is the vector of path plannign points in cart space
-    std::vector<cv::Point2d> cam_path;     // this is the vector of path plannign points in camera space
-    ground_path.emplace_back(cv::Point2d(0, 0));
+    nav_msgs::msg::Path ground_points;     // this is the vector of path plannign points in camera space
 
     int width = camera_info.fullResolution().width;    // camera space sizes!
     int height = camera_info.fullResolution().height;  // Camera space sizes!
@@ -38,34 +37,26 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         // is_right_valid = false;
         return std::nullopt;
     }
-    std::vector<cv::Point2d> bigger_array;
-    std::vector<cv::Point2d> smaller_array;
+    nav_msgs::msg::Path bigger_array;
+    nav_msgs::msg::Path smaller_array;
 
     bool is_left_bigger = left_contours.size() > right_contours.size();
 
     if (is_left_bigger) {
-        bigger_array = left_contours;
-        smaller_array = right_contours;
+        bigger_array = backend::cameraPixelToGroundPos(left_contours, camera_info, 0.6, frame_id);
+        smaller_array = backend::cameraPixelToGroundPos(right_contours, camera_info, 0.6, frame_id);
     } else {
-        smaller_array = left_contours;
-        bigger_array = right_contours;
+        smaller_array = backend::cameraPixelToGroundPos(left_contours, camera_info, 0.6, frame_id);
+        bigger_array = backend::cameraPixelToGroundPos(right_contours, camera_info, 0.6, frame_id);
     }
 
-    if (is_left_bigger) {
-        bigger_array = left_contours;
-        smaller_array = right_contours;
-    } else {
-        bigger_array = right_contours;
-        smaller_array = left_contours;
-    }
-
-    for (int i = 0; i < smaller_array.size(); i++) {
+    for (int i = 0; i < smaller_array.poses.size(); i++) {
         float old_dist = 1000000;
         int lucky_index = -1;
 
-        for (int j = 0; j < bigger_array.size(); j++) {
-            double dx = smaller_array[i].x - bigger_array[j].x;
-            double dy = smaller_array[i].y - bigger_array[j].y;
+        for (int j = 0; j < bigger_array.poses.size(); j++) {
+            double dx = smaller_array.poses[i].pose.position.x - bigger_array.poses[j].pose.position.x;
+            double dy = smaller_array.poses[i].pose.position.y - bigger_array.poses[j].pose.position.y;
             double new_dist = std::sqrt(dx * dx + dy * dy);
             if (new_dist < old_dist) {
                 old_dist = new_dist;
@@ -74,22 +65,28 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         }
 
         if (lucky_index >= 0) {
-            double x = (bigger_array[lucky_index].x + smaller_array[i].x) / 2;
-            double y = (bigger_array[lucky_index].y + smaller_array[i].y) / 2;
+            double x = (bigger_array.poses[lucky_index].pose.position.x + smaller_array.poses[i].pose.position.x) / 2;
+            double y = (bigger_array.poses[lucky_index].pose.position.y + smaller_array.poses[i].pose.position.y) / 2;
 
-            cam_path.push_back(cv::Point2d(x, y));
+            geometry_msgs::msg::PoseStamped p{};
+            // TODO solve why -world_vec.x needs to be invereted and let andy know why pls
+            p.pose.position.x = x;
+            p.pose.position.y = y;
+            p.pose.position.z = 0;
+            p.header.frame_id = frame_id;
+    
+            ground_points.poses.push_back(p);
 
-            bigger_array.erase(bigger_array.begin() + lucky_index);
+            bigger_array.poses.erase(bigger_array.poses.begin() + lucky_index);
         }
     }
 
-    if (cam_path.empty()) {
+    if (ground_points.poses.empty() && ground_points.poses.size() < 1000) {
         return std::nullopt;
     } else {
         // Convert from cv types to nav::msg
         // too few args
         // TODO use tf2 to fnd the hieght
-        auto ground_points = backend::cameraPixelToGroundPos(cam_path, camera_info, 0.6, frame_id);
         return ground_points;
     }
 }

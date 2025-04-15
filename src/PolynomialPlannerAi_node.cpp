@@ -54,7 +54,7 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
     } else {
         std::vector<geometry_msgs::msg::Vector3> left = msg->left_contour;
         std::vector<geometry_msgs::msg::Vector3> right = msg->right_contour;
-
+        std::vector<float> center_poly = msg->center_poly;
         std::vector<cv::Point2d> cv_points_left;
         std::vector<cv::Point2d> cv_points_right;
 
@@ -77,7 +77,7 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
         // TODO camera frame_id is wrong
         auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
         std::optional<nav_msgs::msg::Path> path_optional =
-            backend::create_path(cv_points_left, cv_points_right, camera_rgb, frame_id);
+            backend::create_path(cv_points_left, cv_points_right, center_poly, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
 
         if (path_optional.has_value()) {

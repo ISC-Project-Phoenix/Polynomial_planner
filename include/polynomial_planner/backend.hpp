@@ -47,5 +47,6 @@ nav_msgs::msg::Path cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
                                            std::string frame_id);
 std::optional<nav_msgs::msg::Path> create_path(std::vector<cv::Point2d>& left_contours,
                                                std::vector<cv::Point2d>& right_contours,
+                                               std::vector<float> center_poly,
                                                image_geometry::PinholeCameraModel& camera_info, std::string frame_id);
 }  // namespace backend
