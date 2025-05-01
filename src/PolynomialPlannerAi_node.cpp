@@ -77,16 +77,18 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
             backend::create_path(cv_points_left, cv_points_right, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
 
+
         if (path_optional.has_value()) {
             path = path_optional.value();
+            std::string p = std::to_string(path.poses.size());
+            RCLCPP_INFO(this->get_logger(), p.c_str());
             path.header.frame_id = this->get_parameter(std::string("camera_frame")).as_string();
             this->path_pub->publish(path);  // error invalid operator *path
                                             // Extract and print coefficients
             // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");
-            std::string path_string = "PATH size: " + std::to_string(path.poses.size());
-            RCLCPP_INFO(this->get_logger(), path_string.c_str());
         } else {
-            RCLCPP_INFO(this->get_logger(), "error no path");
+            std::string p = " error no path ";
+            RCLCPP_INFO(this->get_logger(), p.c_str());
         }
         return;
     }
