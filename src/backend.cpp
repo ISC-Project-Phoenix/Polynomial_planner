@@ -52,11 +52,11 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     }
 
     if (is_left_bigger) {
-        bigger_array = left_contours;
-        smaller_array = right_contours;
+        bigger_array = backend::cameraPixelToGroundPos(left_contours, camera_info);
+        smaller_array = backend::cameraPixelToGroundPos(right_contours, camera_info);
     } else {
-        bigger_array = right_contours;
-        smaller_array = left_contours;
+        bigger_array = backend::cameraPixelToGroundPos(right_contours, camera_info);
+        smaller_array = backend::cameraPixelToGroundPos(left_contours, camera_info);
     }
 
     for (int i = 0; i < smaller_array.size(); i++) {
@@ -79,7 +79,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
             cam_path.push_back(cv::Point2d(x, y));
 
-            bigger_array.erase(bigger_array.begin() + lucky_index);
+            //bigger_array.erase(bigger_array.begin() + lucky_index);
         }
     }
 
@@ -89,8 +89,21 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         // Convert from cv types to nav::msg
         // too few args
         // TODO use tf2 to fnd the hieght
-        auto ground_points = backend::cameraPixelToGroundPos(cam_path, camera_info, 0.6, frame_id);
-        return ground_points;
+        // auto ground_points = backend::cameraPixelToGroundPos(cam_path, camera_info, 0.6, frame_id);
+        nav_msgs::msg::Path msg{};
+        std::transform(cam_path.begin(), cam_path.end(), std::back_inserter(msg.poses),
+                       [&frame_id](const cv::Point2d& point) {
+                           geometry_msgs::msg::PoseStamped pose{};
+                           // frame = "redto0 isn't sure if we use this";
+                           // redto0 is SURE that we use this update and fix ASAP
+                           pose.header.frame_id = frame_id;  // literally is "notaemptystring"
+                           pose.pose.position.x = point.x;
+                           pose.pose.position.y = point.y;
+                           // pose.pose.position.z = point.z;
+
+                           return pose;
+                       });
+        return msg;
     }
 }
 
@@ -104,9 +117,49 @@ cv::Vec3f intersectPoint(cv::Vec3f rayVector, cv::Vec3f rayPoint, cv::Vec3f plan
 
 // TODO: make it not die when z is too small
 //       or make z not too small
-nav_msgs::msg::Path backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& path_points,
-                                                    const image_geometry::PinholeCameraModel& camera_info,
-                                                    float camera_height, std::string frame_id) {
+
+std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& path_points,
+                                                         image_geometry::PinholeCameraModel& camera_info) {
+    // Rotation that rotates left 90 and backwards 90.
+    // This converts from camera coordinates in OpenCV to ROS coordinates
+    tf2::Quaternion optical_to_ros{};
+    optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
+    // -- CAMERA COORDINATES --
+    //      positive x = +X TO CAMERA
+    //      positive y = STRAIGHT TO GROUND
+    //      positive z = OUT OF CAMERA
+    //      hopefully
+    std::vector<cv::Point2d> rwpoints;
+
+    auto ray_point = cv::Vec3f{0, 0.527, 0};
+
+    for (cv::Point2d& pixel : path_points) {
+        if (!camera_info.initialized()) {
+            continue;
+        }
+
+        // Project pixel to camera space
+        auto ray = camera_info.projectPixelTo3dRay(pixel);
+        auto ray_vect = cv::Vec3f(ray.x, ray.y, ray.z);
+        // The oak-d uses shorts in mm, sim uses f32 in m
+        auto point_3d = intersectPoint(ray_vect, ray_point, cv::Vec3f(0, -1, 0),
+                                       cv::Vec3f(0, 0, 0));  // returned form ray plane function
+
+        // Convert from camera space to ros coordinates ("World" but wrt camera mount)
+        tf2::Vector3 tf_vec{point_3d[0], point_3d[1], point_3d[2]};
+        tf2::Vector3 world_vec = tf2::quatRotate(optical_to_ros, tf_vec);
+
+        cv::Point2d dvector(-world_vec.x(), -world_vec.y());
+
+        rwpoints.push_back(dvector);
+    }
+
+    return rwpoints;
+}
+
+nav_msgs::msg::Path backend::cameraPixelToGroundPath(std::vector<cv::Point2d>& path_points,
+                                                     const image_geometry::PinholeCameraModel& camera_info,
+                                                     float camera_height, std::string frame_id) {
     // Rotation that rotates left 90 and backwards 90.
     // This converts from camera coordinates in OpenCV to ROS coordinates
     tf2::Quaternion optical_to_ros{};
