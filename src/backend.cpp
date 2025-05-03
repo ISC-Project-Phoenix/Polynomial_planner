@@ -16,9 +16,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                                                         image_geometry::PinholeCameraModel& camera_info,
                                                         std::string_view frame_id) {
     // take in contours
-    // DO NOT THE Polynomials
-    // Match the pointd...
-    // shortest side first larger side second.
+    // create your own polynomials
+    // project from the points using the polynmials
     // translate to normal space.
 
     // takes in two arrays of x, y, and degree.pushback();
@@ -78,24 +77,16 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
             ground_path.push_back(cv::Point2d(x, y));
 
-            // bigger_array.erase(bigger_array.begin() + lucky_index);
+            bigger_array.erase(bigger_array.begin() + lucky_index);
         }
     }
 
     if (ground_path.empty()) {
         return std::nullopt;
     } else {
-        // Convert from cv types to nav::msg
-
-        // convert from camera to ground
-        // done further ahead already
         // std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, camera_info);
 
         nav_msgs::msg::Path msg{};
-        // msg.header.frame_id = frame;
-        // for (cv::Point2d ground_points : ground_path) {
-        // std::
-        //  }
         // converting <x,y> to message type in ROS
         std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
                        [&frame_id](const cv::Point2d& point) {
