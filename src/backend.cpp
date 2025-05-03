@@ -13,7 +13,7 @@
 
 std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>& left_contours,
                                                         std::vector<cv::Point2d>& right_contours,
-                                                        image_geometry::PinholeCameraModel& rgb_info_sub,
+                                                        image_geometry::PinholeCameraModel& camera_info,
                                                         std::string_view frame_id) {
     // take in contours
     // DO NOT THE Polynomials
@@ -30,8 +30,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     std::vector<cv::Point2d> cam_path;     // this is the vector of path plannign points in camera space
     // ground_path.emplace_back(cv::Point2d(0, 0));
 
-    int width = rgb_info_sub.fullResolution().width;    // camera space sizes!
-    int height = rgb_info_sub.fullResolution().height;  // Camera space sizes!
+    int width = camera_info.fullResolution().width;    // camera space sizes!
+    int height = camera_info.fullResolution().height;  // Camera space sizes!
 
     bool is_right_valid = true;  // stores if Polynomial was intizatized!
     bool is_left_valid = true;   // left and right respectively
@@ -51,11 +51,11 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     bool is_left_bigger = left_contours.size() > right_contours.size();
 
     if (is_left_bigger) {
-        bigger_array = cameraPixelToGroundPos(left_contours, rgb_info_sub);
-        smaller_array = cameraPixelToGroundPos(right_contours, rgb_info_sub);
+        bigger_array = cameraPixelToGroundPos(left_contours, camera_info);
+        smaller_array = cameraPixelToGroundPos(right_contours, camera_info);
     } else {
-        smaller_array = cameraPixelToGroundPos(left_contours, rgb_info_sub);
-        bigger_array = cameraPixelToGroundPos(right_contours, rgb_info_sub);
+        smaller_array = cameraPixelToGroundPos(left_contours, camera_info);
+        bigger_array = cameraPixelToGroundPos(right_contours, camera_info);
     }
 
     for (int i = 0; i < smaller_array.size(); i++) {
@@ -89,7 +89,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
         // convert from camera to ground
         // done further ahead already
-        // std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, rgb_info_sub);
+        // std::vector<cv::Point2d> ground_path = cameraPixelToGroundPos(cam_path, camera_info);
 
         nav_msgs::msg::Path msg{};
         // msg.header.frame_id = frame;
@@ -162,59 +162,3 @@ std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d
 
     return rwpoints;
 }
-
-// // why are the pointer things the way they are
-// // TODO: make it not die when z is too small
-// //       or make z not too small
-// std::vector<cv::Point2d> backend::cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
-//                                                          image_geometry::PinholeCameraModel rgb_info_sub, int i) {
-//     // Rotation that rotates left 90 and backwards 90.
-//     // This converts from camera coordinates in OpenCV to ROS coordinates
-//     tf2::Quaternion optical_to_ros{};
-//     // set the Roll Pitch YAW
-//     /// optical_to_ros.setRPY(0.0, 0.0, 0.0);
-//     optical_to_ros.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
-
-//     std::vector<cv::Point2d> rwpoints;
-//     const double camera_height = 0.6;  // meters
-
-//     for (cv::Point2d& pixel : pixels) {
-//         // gotta rectify the pixel before we raycast
-//         // pixel.y += 120;
-//         // pixel.x += 320;
-//         // cv::Point2d rectPixel = rgb_info_sub.rectifyPoint(pixel);
-//         cv::Point3d ray = rgb_info_sub.projectPixelTo3dRay(pixel);
-
-//         // safety check
-//         if (fabs(ray.y) < 1e-6) {  // Near zero check
-//             // RCLCPP_WARN(rclcpp::get_logger("backend"), "Invalid ray projection (y near zero)");
-//             continue;  // Skip this point
-//         }
-
-//         // -- CAMERA COORDINATES --
-//         //      positive x = +X TO CAMERA
-//         //      positive y = STRAIGHT TO GROUND
-//         //      positive z = OUT OF CAMERA
-//         //      hopefully
-
-//         // ask zach for the trig, extend ray to the floor.
-//         double divisor = ray.y / camera_height;  // divide by how high off the ground the camera is!
-//         ray.x = ray.x / divisor;
-//         ray.y = ray.y / divisor;
-//         ray.z = ray.z / divisor;
-//         // ray /= ray.z / -0.6;
-//         // ray.z = (ray.z * -1);  // we don't really care abt z, since it -will- *should* always just be cameraHeight
-//         // tf2::Vector3 tf_vec{ray.z, -ray.x, -ray.y};
-//         tf2::Vector3 tf_vec{ray.x, ray.y, ray.z};
-//         tf_vec = tf2::quatRotate(optical_to_ros, tf_vec);
-
-//         //return type world_vec, use this is
-
-//         cv::Point2d dvector(tf_vec.x(), tf_vec.y());
-
-//         // push back vectors
-//         rwpoints.push_back(dvector);
-//     }
-
-//     return rwpoints;
-// }

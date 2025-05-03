@@ -21,6 +21,9 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
     // RGB_INFO PARAMETER DO NOT DELETE
     this->declare_parameter("camera_frame", "mid_cam_link");
 
+    // Frame params
+    this->declare_parameter("path_frame", "odom");
+
     this->rgb_info_sub = this->create_subscription<sensor_msgs::msg::CameraInfo>(
         "/camera/mid/rgb/camera_info", 1,
         [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr ci) { this->rgb_model.fromCameraInfo(ci); });
@@ -71,18 +74,34 @@ void PolynomialPlannerAi::polynomial_cb(phnx_msgs::msg::Contours::SharedPtr msg,
 
         //std::string frame_id = this->get_parameter("camera_frame").as_string();
         //std::string frame_id = "notemptystring";
-        // TODO camera frame_id is wrong
         auto frame_id = this->get_parameter(std::string("camera_frame")).as_string();
         std::optional<nav_msgs::msg::Path> path_optional =
             backend::create_path(cv_points_left, cv_points_right, camera_rgb, frame_id);
         nav_msgs::msg::Path path;
-
 
         if (path_optional.has_value()) {
             path = path_optional.value();
             std::string p = std::to_string(path.poses.size());
             RCLCPP_INFO(this->get_logger(), p.c_str());
             path.header.frame_id = this->get_parameter(std::string("camera_frame")).as_string();
+            path.header.stamp = this->get_clock()->now();
+
+            try {
+                // Transform path to odom. While the path is in the same location, its now WRT where the kart started, which
+                // means that as the kart moves and this path is transformed back WRT the kart, the path will have moved location.
+                auto trans = this->tf2_buffer->lookupTransform(this->get_parameter("path_frame").as_string(),
+                                                               path.header.frame_id, rclcpp::Time{});
+                for (auto& pose : path.poses) {
+                    tf2::doTransform(pose, pose, trans);
+                    pose.header.frame_id = this->get_parameter("path_frame").as_string();
+                    pose.header.stamp = this->get_clock()->now();
+                }
+                path.header.frame_id = this->get_parameter("path_frame").as_string();
+            } catch (tf2::LookupException& e) {
+                RCLCPP_INFO(this->get_logger(), "Could not look up odom!");
+                return;
+            }
+
             this->path_pub->publish(path);  // error invalid operator *path
                                             // Extract and print coefficients
             // RCLCPP_INFO(this->get_logger(), "Received Polynomial Coefficients:");

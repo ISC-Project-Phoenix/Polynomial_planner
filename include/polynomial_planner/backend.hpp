@@ -42,7 +42,6 @@ public:
 };
 
 namespace backend {
-
 // std::vector<double> FitPolynomial(const std::vector<double>& x, const std::vector<double>& y, int degree);
 
 std::vector<cv::Point2d> getLeftContour(std::vector<double> message);
