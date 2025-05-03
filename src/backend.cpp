@@ -43,17 +43,32 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
     bool is_left_bigger = left_contours.size() > right_contours.size();
     Polynomial poly_center = Polynomial(center_poly);
-    if (is_left_bigger) {
+    if (!is_left_bigger) {
         for (int i = 0; i < left_contours.size(); i++){
             float x = poly_center.poly(left_contours[i].y); 
             float y = left_contours[i].y;
+            // prevents placing points too far out of the camera frame,
+            // a little extrapolation is fine but if the poly is too steep it can easily put points at super high x vals and throws off the cart
+            if (x < -10) {
+                x = -10;
+            }
+            if (x > width + 10) {
+                x = width + 10;
+            }
             cam_path.push_back(cv::Point2d(x, y));
         }
     } else {
         for (int i = 0; i < right_contours.size(); i++){
             float x = poly_center.poly(right_contours[i].y); 
             float y = right_contours[i].y;
-            cam_path.push_back(cv::Point2d(y, x));
+            if (x < -10) {
+                x = -10;
+            }
+            if (x > width + 10) {
+                x = width + 10;
+            }
+            cam_path.push_back(cv::Point2d(x, y));
+            //cam_path.push_back(cv::Point2d(x, y)); // should this be x, y? switched from y, x to match left contour
         }
     }
 
