@@ -42,11 +42,12 @@ public:
 };
 
 namespace backend {
-std::optional<nav_msgs::msg::Path> create_path(std::vector<float>& leftPolyVector,
-                                               const image_geometry::PinholeCameraModel& camera_info,
-                                               const std::string_view& frame);
-
-nav_msgs::msg::Path cameraPixelToGroundPos(std::vector<cv::Point2d>& path_points,
-                                           const image_geometry::PinholeCameraModel& camera_info, float camera_height,
-                                           const std::string_view& frame);
+std::vector<cv::Point2d> cameraPixelToGroundPos(std::vector<cv::Point2d>& pixels,
+                                                image_geometry::PinholeCameraModel& rgb_info_sub);
+nav_msgs::msg::Path cameraPixelToGroundPath(std::vector<cv::Point2d>& pixels,
+                                            const image_geometry::PinholeCameraModel& rgb_info_sub, float camera_height,
+                                            std::string frame_id);
+std::optional<nav_msgs::msg::Path> create_path(std::vector<cv::Point2d>& left_contours,
+                                               std::vector<cv::Point2d>& right_contours,
+                                               image_geometry::PinholeCameraModel& camera_info, std::string frame_id);
 }  // namespace backend
