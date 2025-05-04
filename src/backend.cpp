@@ -16,29 +16,16 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<float>& left
     int width = camera_info.fullResolution().width;    // camera space sizes!
     int height = camera_info.fullResolution().height;  // Camera space sizes!
 
-    auto leftPoly = std::make_unique<Polynomial>(leftPolyVector);
+    bool is_right_valid = true;  // stores if Polynomial was intizatized!
+    bool is_left_valid = true;   // left and right respectively
+    bool is_left_bigger = left_contours.size() > right_contours.size();
+    
+    auto bigger_array = backend::cameraPixelToGroundPos(left_contours, camera_info);
 
-    // interval for polynomial
-    float max = height - height * .40;     // artificial event horizon,
-                                           // the x value in which path points are no longer allowed to cross.
-    float interval = 3;                    // stepping x value up by 3camera px on each iteration
-    float start = height - height * 0.20;  // bottom of frame
-    float threshold = 10.0;                // min dist between points
-
-    float dist = 0;  // the value between the last published point and the current point
-    for (int x = start; x > max; x -= interval) {
-        dist += sqrt(interval * interval + pow(leftPoly->poly(x) - leftPoly->poly(x + interval), 2));
-        // TODO distance
-
-        if (dist > threshold) {
-            int translate = height - height * 0.45;
-            translate = 0;
-            float camX = leftPoly->poly(x);
-            float camY = x + translate;
-
-            cam_path.push_back(cv::Point2d(camX, camY));
-            dist = 0;
-        }
+    for (int j = 0; j < bigger_array.size(); j++) {
+        double x = bigger_array[j].x;
+        double y = bigger_array[j].y - 1.8;
+        cam_path.push_back(cv::Point2d(x, y));
     }
 
     if (cam_path.empty()) {
