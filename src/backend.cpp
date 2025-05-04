@@ -42,7 +42,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
     for (int i = 0; i < bigger_array.size(); i++) {
         double x = bigger_array[i].x;
-        double y = bigger_array[i].y + 1.80;
+        double y = bigger_array[i].y - 1.80;
 
         cam_path.push_back(cv::Point2d(x, y));
     }
