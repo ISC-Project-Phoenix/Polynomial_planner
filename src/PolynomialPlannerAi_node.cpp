@@ -38,7 +38,7 @@ PolynomialPlannerAi::PolynomialPlannerAi(const rclcpp::NodeOptions& options) : N
 
     this->path_pub = this->create_publisher<nav_msgs::msg::Path>("/path", 5);
 
-    RCLCPP_INFO(this->get_logger(), "PolynomialPlannerAi Node Started! Waiting for polynomial data...");
+    RCLCPP_INFO(this->get_logger(), "PolynomialPlannerAi Node Started! Waiting for contour data...");
     // TF2 things
     this->tf2_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
     this->tf2_listener = std::make_unique<tf2_ros::TransformListener>(*this->tf2_buffer);

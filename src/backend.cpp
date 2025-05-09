@@ -34,7 +34,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         // is_left_valid = false;
         return std::nullopt;
     }
-    
+
     std::vector<cv::Point2d> bigger_array;
     std::vector<cv::Point2d> smaller_array;
 
