@@ -47,6 +47,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         cam_path.push_back(cv::Point2d(x, y));
     }
 
+    cam_path = ccma_points(cam_path);
+
     if (cam_path.empty()) {
         return std::nullopt;
     } else {
@@ -165,4 +167,10 @@ nav_msgs::msg::Path backend::cameraPixelToGroundPath(std::vector<cv::Point2d>& p
     rwpoints.header.frame_id = frame_id;
 
     return rwpoints;
+}
+
+std::vector<cv::Point2d> backend::ccma_points(const std::vector<cv::Point2d>& ground_points) {
+    if (ground_points.size() > 3)    
+        return ccma_obj.filter(ground_points, "none");
+    return ground_points;
 }
