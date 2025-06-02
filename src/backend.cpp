@@ -1,10 +1,11 @@
 #include "polynomial_planner/backend.hpp"
+#include "CCMA.cpp"
 
 #include <algorithm>
 #include <geometry_msgs/msg/detail/pose_stamped__struct.hpp>
 #include <memory>
 
-#include "CCMA.cpp"
+#include "polynomial_planner/CCMA.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
 
@@ -58,7 +59,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         // TODO use tf2 to fnd the hieght
         // auto ground_points = backend::cameraPixelToGroundPos(cam_path, camera_info, 0.6, frame_id);
         nav_msgs::msg::Path msg{};
-        std::transform(cam_path.begin(), cam_path.end(), std::back_inserter(msg.poses),
+        std::transform(ground_path.begin(), ground_path.end(), std::back_inserter(msg.poses),
                        [&frame_id](const cv::Point2d& point) {
                            geometry_msgs::msg::PoseStamped pose{};
                            // frame = "redto0 isn't sure if we use this";
@@ -172,7 +173,7 @@ nav_msgs::msg::Path backend::cameraPixelToGroundPath(std::vector<cv::Point2d>& p
 
 std::vector<cv::Point2d> backend::ccma_points(const std::vector<cv::Point2d>& ground_points) {
     if (ground_points.size() > 3) {
-        const MatrixXd cam_matrix = ccma_obj.points_to_MatrixXd(ground_points);
+        const Eigen::MatrixXd cam_matrix = ccma_obj.points_to_MatrixXd(ground_points);
         return ccma_obj.matrixXd_to_Points2d(ccma_obj.filter(cam_matrix, "none"));
     }
     return ground_points;

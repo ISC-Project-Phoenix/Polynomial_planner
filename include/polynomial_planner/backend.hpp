@@ -6,7 +6,7 @@
 #include <string_view>
 #include <vector>
 
-#include "CCMA.hpp"
+#include "polynomial_planner/CCMA.hpp"
 #include "image_geometry/pinhole_camera_model.h"
 #include "nav_msgs/msg/path.hpp"
 

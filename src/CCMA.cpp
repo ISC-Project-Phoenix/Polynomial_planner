@@ -126,7 +126,7 @@ vector<vector<double>> CCMA::generate_weights(int width, const string& distribut
     return weight_list;
 };
 
-MatrixXd CCMA::ma_points(const MatrixXd& points, const vector<double>& weights) const {
+MatrixXd CCMA::ma_points(const Eigen::MatrixXd& points, const vector<double>& weights) const {
     int kernel_width = weights.size();
     int last_index = points.cols() - kernel_width;
 
@@ -134,7 +134,7 @@ MatrixXd CCMA::ma_points(const MatrixXd& points, const vector<double>& weights) 
     // we do one ma at col 1 (index 0, covers col 1 and 2)
     // and one at col 2 (index 1,	   covers col 2 and 3).
 
-    MatrixXd out(3, last_index + 1);
+    Eigen::MatrixXd out(3, last_index + 1);
     VectorXd w = Eigen::Map<const VectorXd>(weights.data(), kernel_width);
 
     for (int column = 0; column < last_index + 1; column++) {  // v not off by one?
@@ -147,9 +147,9 @@ MatrixXd CCMA::ma_points(const MatrixXd& points, const vector<double>& weights) 
 }
 
 MatrixXd CCMA::curvature_vectors(
-    const MatrixXd& points) {  // this might not need to be MatrixXd, see if it can be replaced with a vector<double>
+    const Eigen::MatrixXd& points) {  // this might not need to be MatrixXd, see if it can be replaced with a vector<double>
                                // this might not need to be curvature, see if it can be replaced with radii.
-    MatrixXd kv = MatrixXd::Zero(3, points.cols());
+    Eigen::MatrixXd kv = Eigen::MatrixXd::Zero(3, points.cols());
 
     for (int i = 1; i < points.rows() - 1; i++) {  // don't index outermost points
         const Eigen::Vector3d& previous_point = points.col(i - 1);
@@ -177,7 +177,7 @@ MatrixXd CCMA::curvature_vectors(
     return kv;
 }
 
-vector<double> CCMA::alphas(const MatrixXd& points, const vector<double>& curvatures) {
+vector<double> CCMA::alphas(const Eigen::MatrixXd& points, const vector<double>& curvatures) {
     int width = points.cols();
     vector<double> angles(width, 0.0);
 
@@ -209,14 +209,14 @@ vector<double> CCMA::normalized_ma_radii(const vector<double>& alphas, int w_ma,
     return radii;
 }
 
-MatrixXd CCMA::_filter(const MatrixXd& points, int w_ma, int w_cc, bool cc_mode) const {
+Eigen::MatrixXd CCMA::_filter(const Eigen::MatrixXd& points, int w_ma, int w_cc, bool cc_mode) const {
     int w_ccma = w_ma + w_cc + 1;
 
-    MatrixXd points_ma = ma_points(points, weights_ma_[w_ma]);
+    Eigen::MatrixXd points_ma = ma_points(points, weights_ma_[w_ma]);
 
     if (!cc_mode) return points_ma;
 
-    MatrixXd cv = curvature_vectors(points_ma);
+    Eigen::MatrixXd cv = curvature_vectors(points_ma);
     vector<double> curvatures(cv.cols());
 
     for (int i = 0; i < cv.cols(); i++) {
@@ -227,7 +227,7 @@ MatrixXd CCMA::_filter(const MatrixXd& points, int w_ma, int w_cc, bool cc_mode)
     vector<double> radii_ma = normalized_ma_radii(angles, w_ma, weights_ma_[w_ma]);
 
     int n_out = points.cols() - 2 * w_ccma;
-    MatrixXd out(3, n_out);
+    Eigen::MatrixXd out(3, n_out);
 
     for (int i = 0; i < n_out; i++) {
         Eigen::Vector3d unit_tangent = helpers::unit(
@@ -260,12 +260,12 @@ MatrixXd CCMA::_filter(const MatrixXd& points, int w_ma, int w_cc, bool cc_mode)
 	MatrixXd out = MatrixXd::Zero(points.rows(), dim);							// only needed if we want to use edge filling which keeps the same amount of points, without this we lose ~ w_ccma points from either end, but we have a ton of points so this shouldn't really matter. Can be implemented if needed.
 }*/
 
-MatrixXd CCMA::filter(const MatrixXd& points, const string& mode, bool cc_mode) {
+Eigen::MatrixXd CCMA::filter(const Eigen::MatrixXd& points, const string& mode, bool cc_mode) {
     // PADDING AND WRAPPING NOT IMPLEMENTED BECAUSE WE SHOULDN'T NEED THEM, PADDING MIGHT BE NICE TO HAVE BUT WE NEED TO MAKE SURE THIS WORKS
 
     if (points.cols() < (cc_mode ? w_ccma_ * 2 + 1 : w_ma_ * 2 + 1)) {
         // since we need more than our width as points we just panic if we dont get them and return 0.
-        return MatrixXd::Zero(points.rows(), points.cols());
+        return Eigen::MatrixXd::Zero(points.rows(), points.cols());
     }
     return _filter(points, w_ma_, w_cc_, cc_mode);
 }
