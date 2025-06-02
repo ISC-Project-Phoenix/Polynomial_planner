@@ -4,6 +4,7 @@
 #include <geometry_msgs/msg/detail/pose_stamped__struct.hpp>
 #include <memory>
 
+#include "CCMA.cpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "image_geometry/pinhole_camera_model.h"
 
@@ -23,11 +24,11 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     std::vector<cv::Point2d> cam_path;     // this is the vector of path plannign points in camera space
     ground_path.emplace_back(cv::Point2d(0, 0));
 
-    int width = camera_info.fullResolution().width;    // camera space sizes!
-    int height = camera_info.fullResolution().height;  // Camera space sizes!
+    // int width = camera_info.fullResolution().width;    // camera space sizes!
+    // int height = camera_info.fullResolution().height;  // Camera space sizes!
 
-    bool is_right_valid = true;  // stores if Polynomial was intizatized!
-    bool is_left_valid = true;   // left and right respectively
+    // bool is_right_valid = true;  // stores if Polynomial was intizatized!
+    // bool is_left_valid = true;   // left and right respectively
 
     if (left_contours.empty()) {
         // for any and all checks regarding data cleaning!
@@ -47,9 +48,9 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         cam_path.push_back(cv::Point2d(x, y));
     }
 
-    cam_path = ccma_points(cam_path);
+    ground_path = backend::ccma_points(cam_path);
 
-    if (cam_path.empty()) {
+    if (ground_path.empty()) {
         return std::nullopt;
     } else {
         // Convert from cv types to nav::msg
@@ -170,7 +171,9 @@ nav_msgs::msg::Path backend::cameraPixelToGroundPath(std::vector<cv::Point2d>& p
 }
 
 std::vector<cv::Point2d> backend::ccma_points(const std::vector<cv::Point2d>& ground_points) {
-    if (ground_points.size() > 3)    
-        return ccma_obj.filter(ground_points, "none");
+    if (ground_points.size() > 3) {
+        const MatrixXd cam_matrix = ccma_obj.points_to_MatrixXd(ground_points);
+        return ccma_obj.matrixXd_to_Points2d(ccma_obj.filter(cam_matrix, "none"));
+    }
     return ground_points;
 }
