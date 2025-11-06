@@ -54,5 +54,6 @@ std::optional<nav_msgs::msg::Path> create_path(std::vector<cv::Point2d>& left_co
 
 ccma::CCMA ccma_obj;
 std::vector<cv::Point2d> ccma_points(const std::vector<cv::Point2d>& points);
+std::vector<cv::Point2d> circle_project(const std::vector<cv::Point2d>& ground_points, int kernel, float projection);
 
 }  // namespace backend

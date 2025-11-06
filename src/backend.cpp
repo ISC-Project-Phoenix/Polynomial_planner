@@ -46,10 +46,13 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
         double x = bigger_array[i].x;
         double y = bigger_array[i].y - 1.80;
 
+
         cam_path.push_back(cv::Point2d(x, y));
     }
 
-    ground_path = backend::ccma_points(cam_path);
+    // backend::circle_project(const std::vector<cv::Point2d>& ground_points, int kernel, float projection)
+    cam_path = circle_project(bigger_array, )
+    ground_path = backend::ccma_points(cam_path, 5, 1.8);
 
     if (ground_path.empty()) {
         return std::nullopt;
@@ -176,5 +179,69 @@ std::vector<cv::Point2d> backend::ccma_points(const std::vector<cv::Point2d>& gr
         const Eigen::MatrixXd cam_matrix = ccma_obj.points_to_MatrixXd(ground_points);
         return ccma_obj.matrixXd_to_Points2d(ccma_obj.filter(cam_matrix, "none"));
     }
+    return ground_points;
+}
+
+std::vector<cv::Point2d> backend::circle_project(const std::vector<cv::Point2d>& ground_points, int kernel, float projection) {
+    // given k kernal
+    int k = kernel;
+    int j = (k - 1) / 2;
+
+    std::vector<cv::Point2d> moved_ground_points;
+
+    for(int i = 0; i < ground_points.size(); i++){
+        if ( j <= i || i <= j ){
+            continue;
+        }
+        cv::Point2d left;
+        cv::Point2d right;
+        for (int m = i - j; m > j + i; j++){
+            left.x += ground_points[m].x;
+            left.y += ground_points[m].y;
+        }
+        left.x = left.x / j;
+        left.y = left.y / j;
+        
+        for (int m = i + 1; m > j + i; j++){
+            right.x += ground_points[m].x;
+            right.y += ground_points[m].y;
+        }
+        right.x = right.x / j;
+        right.y = right.y / j;
+
+        cv::Point2d center_point = ground_points[i];
+
+        double x1 = left.x, y1 = left.y;
+        double x2 = center_point.x, y2 = center_point.y;
+        double x3 = right.x, y3 = right.y;
+        
+        // Calculate determinants
+        double A = x1 * (y2 - y3) - y1 * (x2 - x3) + (x2 * y3 - x3 * y2);
+        double B = (x1*x1 + y1*y1) * (y3 - y2) + 
+                (x2*x2 + y2*y2) * (y1 - y3) + 
+                (x3*x3 + y3*y3) * (y2 - y1);
+        double C = (x1*x1 + y1*y1) * (x2 - x3) + 
+                (x2*x2 + y2*y2) * (x3 - x1) + 
+                (x3*x3 + y3*y3) * (x1 - x2);
+        
+        cv::Point2d circle_center(-B / (2 * A), -C / (2 * A));
+        double radius = std::sqrt((B*B + C*C) / (4*A*A) + (x1*x1 + y1*y1 - 2*circle_center.x*x1 - 2*circle_center.y*y1));
+
+
+        // Calculate tangent vector at center_point
+        // The tangent is perpendicular to the radius vector from circle_center to center_point
+        cv::Point2d radius_vector = center_point - circle_center;
+        cv::Point2d tangent_vector(-radius_vector.y, radius_vector.x); // Rotate 90 degrees
+        
+        // Normalize tangent vector
+        double tangent_length = cv::norm(tangent_vector);
+        if (tangent_length > 0) {
+            tangent_vector /= tangent_length;
+        }
+        
+        // Project the point along the tangent direction
+        moved_ground_points.push_back( center_point + tangent_vector * projection);
+    }
+
     return ground_points;
 }
