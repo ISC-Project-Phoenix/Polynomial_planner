@@ -14,11 +14,9 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
                                                         image_geometry::PinholeCameraModel& camera_info,
                                                         std::string frame_id) {
     // take in contours
-    // DO NOT THE Polynomials
-    // Match the pointd...
-    // shortest side first larger side second.
-    // returns coefficients
-    // polyfit::FitPolynomial();
+    // adjust to real space
+    // apply the offset
+    // stay winning! 
 
     // std::string_view is a string lol
     std::vector<cv::Point2d> ground_path;  // this is the vector of path plannign points in cart space
@@ -44,7 +42,7 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
 
     for (int i = 0; i < bigger_array.size(); i++) {
         double x = bigger_array[i].x;
-        double y = bigger_array[i].y - 1.80;
+        double y = bigger_array[i].y - 1.80; // the bullshit translation
 
 
         cam_path.push_back(cv::Point2d(x, y));
