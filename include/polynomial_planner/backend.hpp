@@ -6,6 +6,7 @@
 #include <string_view>
 #include <vector>
 
+#include "polynomial_planner/CCMA.hpp"
 #include "image_geometry/pinhole_camera_model.h"
 #include "nav_msgs/msg/path.hpp"
 
@@ -50,4 +51,9 @@ nav_msgs::msg::Path cameraPixelToGroundPath(std::vector<cv::Point2d>& pixels,
 std::optional<nav_msgs::msg::Path> create_path(std::vector<cv::Point2d>& left_contours,
                                                std::vector<cv::Point2d>& right_contours,
                                                image_geometry::PinholeCameraModel& camera_info, std::string frame_id);
+
+ccma::CCMA ccma_obj;
+std::vector<cv::Point2d> ccma_points(const std::vector<cv::Point2d>& points);
+std::vector<cv::Point2d> circle_project(const std::vector<cv::Point2d>& ground_points, int kernel, float projection);
+
 }  // namespace backend
