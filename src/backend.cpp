@@ -49,8 +49,8 @@ std::optional<nav_msgs::msg::Path> backend::create_path(std::vector<cv::Point2d>
     }
 
     // backend::circle_project(const std::vector<cv::Point2d>& ground_points, int kernel, float projection)
-    cam_path = circle_project(bigger_array, )
-    ground_path = backend::ccma_points(cam_path, 5, 1.8);
+    cam_path = circle_project(bigger_array, 5, 1.8);
+    ground_path = backend::ccma_points(cam_path);
 
     if (ground_path.empty()) {
         return std::nullopt;
